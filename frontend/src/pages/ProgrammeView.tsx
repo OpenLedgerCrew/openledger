@@ -316,15 +316,7 @@ const ProgrammeView: React.FC = () => {
             alignItems: "center",
             gap: 12,
           }}
-        >
-          <span style={{ fontSize: 18 }}>⚠️</span>
-          <p
-            style={{ margin: 0, color: "#92400e", fontSize: 14, maxWidth: 900 }}
-          >
-            Attention: This portal shows funds movement. Physical delivery is
-            confirmed through SAPCONE's field processes.
-          </p>
-        </div>
+        ></div>
       </div>
       <Footer />
     </div>
