@@ -1,10 +1,16 @@
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    TanStackRouterVite(),
+    react(),
+    tailwindcss(),
+  ],
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./test/setup.ts'],
+    environment: "jsdom",
+    setupFiles: ["./test/setup.ts"],
   },
 });
