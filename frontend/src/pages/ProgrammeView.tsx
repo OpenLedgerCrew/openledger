@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
+import { DisclosureBanner } from "../components/DisclosureBanner";
+import { ProgrammeDetailModal } from "../components/ProgrammeDetailModal";
+
 const programmes = [
   {
     title: "Turkana Livelihoods Programme",
@@ -11,6 +14,7 @@ const programmes = [
     reach: "847",
     status: "Active",
     statusColor: "#10b981",
+    
   },
   {
     title: "Kakuma Refugee Programme",
@@ -21,6 +25,7 @@ const programmes = [
     reach: "612",
     status: "Active",
     statusColor: "#10b981",
+    emoji: "🏕️",
   },
   {
     title: "Omo Valley Cross-Border Programme",
@@ -31,6 +36,7 @@ const programmes = [
     reach: "423",
     status: "On Hold",
     statusColor: "#d97706",
+    emoji: "🌏",
   },
   {
     title: "Kakuma Health & Nutrition Programme",
@@ -41,6 +47,7 @@ const programmes = [
     reach: "356",
     status: "Active",
     statusColor: "#10b981",
+    emoji: "❤️",
   },
 ];
 
@@ -51,7 +58,13 @@ const stats = [
   { label: "Beneficiaries", value: "3,421" },
 ];
 
-const ProgrammeView: React.FC = () => {
+export interface ProgrammeViewProps {
+  programmeId?: string;
+}
+
+export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => {
+  const [selectedProg, setSelectedProg] = useState<(typeof programmes)[0] | null>(null);
+
   return (
     <div
       style={{
@@ -286,16 +299,22 @@ const ProgrammeView: React.FC = () => {
                 </div>
               </div>
               <div style={{ marginTop: 18 }}>
-                <a
-                  href="#"
+                <button
+                  id={`view-programme-${programme.title.replace(/\s+/g, '-').toLowerCase()}`}
+                  onClick={() => setSelectedProg(programme)}
                   style={{
+                    background: "none",
+                    border: "none",
                     color: "#047857",
                     fontWeight: 700,
                     textDecoration: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    fontSize: "inherit",
                   }}
                 >
                   View Programme →
-                </a>
+                </button>
               </div>
             </div>
           ))}
@@ -312,9 +331,31 @@ const ProgrammeView: React.FC = () => {
             alignItems: "center",
             gap: 12,
           }}
-        ></div>
+        >
+          <span style={{ fontSize: 18 }}>⚠️</span>
+          <p
+            style={{ margin: 0, color: "#92400e", fontSize: 14, maxWidth: 900 }}
+          >
+            Attention: This portal shows funds movement. Physical delivery is
+            confirmed through SAPCONE's field processes.
+          </p>
+        </div>
+        <DisclosureBanner />
       </div>
       <Footer />
+
+      {/* Programme Detail Modal */}
+      <ProgrammeDetailModal
+        open={selectedProg !== null}
+        onClose={() => setSelectedProg(null)}
+        programmeId={selectedProg?.title.replace(/\s+/g, '-').toLowerCase() ?? ""}
+        programmeName={selectedProg?.title ?? ""}
+        programmeDescription={selectedProg?.description}
+        period={selectedProg?.period}
+        status={selectedProg?.status}
+        statusColor={selectedProg?.statusColor}
+        emoji={selectedProg?.emoji}
+      />
     </div>
   );
 };

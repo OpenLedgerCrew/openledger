@@ -1,7 +1,9 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import cors from 'cors';
+import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import { exportRoutes } from './routes/export';
 import { paymentRoutes } from './routes/payments';
 import { programmeRoutes } from './routes/programmes';
+import { ReadModelCache } from './services/cache';
 import type { SdpForkClient } from './services/sdpForkClient';
 
 export interface AppDeps {
@@ -10,17 +12,37 @@ export interface AppDeps {
   explorerBaseUrl: string;
 }
 
-declare module 'fastify' {
-  interface FastifyInstance {
-    deps: AppDeps;
-  }
+/** An Express app plus the request-independent deps every route needs (deps, cache). */
+export interface AppInstance extends Express {
+  deps: AppDeps;
+  /** In-process read-model cache (section 5.5). One per app instance. */
+  cache: ReadModelCache;
 }
 
-export function buildApp(deps: AppDeps): FastifyInstance {
-  const app = Fastify({ logger: true });
-  app.decorate('deps', deps);
-  app.register(programmeRoutes);
-  app.register(paymentRoutes);
-  app.register(exportRoutes);
+export interface BuildAppOptions {
+  /** Log each request to the console. Off by default so the test runner output stays clean. */
+  logger?: boolean;
+}
+
+export function buildApp(deps: AppDeps, options: BuildAppOptions = {}): AppInstance {
+  const app = express() as AppInstance;
+  app.deps = deps;
+  app.cache = new ReadModelCache();
+
+  if (options.logger) {
+    app.use((req: Request, _res: Response, next: NextFunction) => {
+      console.log(`${req.method} ${req.originalUrl}`);
+      next();
+    });
+  }
+
+  // The portal is a public, read-only, no-login surface (O-5), so the browser client is served
+  // cross-origin during development (Vite on :5173). Reads only; no credentials.
+  app.use(cors({ origin: true, methods: ['GET'] }));
+
+  app.use(programmeRoutes(app));
+  app.use(paymentRoutes(app));
+  app.use(exportRoutes(app));
+
   return app;
 }
