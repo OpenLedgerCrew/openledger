@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -13,6 +15,7 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "pdf-parse": "^1.1.1",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   }
