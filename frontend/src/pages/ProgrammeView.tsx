@@ -11,7 +11,6 @@ const programmes = [
     reach: "847",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "🌱",
   },
   {
     title: "Kakuma Refugee Programme",
@@ -22,7 +21,6 @@ const programmes = [
     reach: "612",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "🏕️",
   },
   {
     title: "Omo Valley Cross-Border Programme",
@@ -33,7 +31,6 @@ const programmes = [
     reach: "423",
     status: "On Hold",
     statusColor: "#d97706",
-    emoji: "🌏",
   },
   {
     title: "Kakuma Health & Nutrition Programme",
@@ -44,7 +41,6 @@ const programmes = [
     reach: "356",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "❤️",
   },
 ];
 
@@ -214,7 +210,7 @@ const ProgrammeView: React.FC = () => {
                       lineHeight: 1.2,
                     }}
                   >
-                    {programme.emoji} {programme.title}
+                    {programme.title}
                   </h2>
                 </div>
                 <span
@@ -305,6 +301,18 @@ const ProgrammeView: React.FC = () => {
           ))}
         </div>
 
+        <div
+          style={{
+            marginTop: 28,
+            backgroundColor: "#fef3c7",
+            border: "1px solid #fde68a",
+            borderRadius: 18,
+            padding: "18px 22px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        ></div>
       </div>
       <Footer />
     </div>
