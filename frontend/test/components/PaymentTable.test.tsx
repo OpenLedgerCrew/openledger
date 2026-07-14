@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { PaymentTable } from '../../src/components/PaymentTable';
+import { PaymentTable } from '../../src/components/ui/PaymentTable';
 import { awaitingPayment, noRecordPayment, paymentRow, readyPayment } from '../helpers/api';
 
 // Doc section 6.1 — the payment table.
