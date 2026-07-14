@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Logo } from "./Logo";
+import { Logo } from "./ui/Logo";
 
 const COLS = [
   {
@@ -7,8 +7,7 @@ const COLS = [
     links: [
       { to: "/programmes", label: "Programmes" },
       { to: "/about", label: "About" },
-      { to: "/", label: "How it works" },
-    ],
+      { to: "/contact", label: "Contact" },],
   },
   {
     heading: "Legal",

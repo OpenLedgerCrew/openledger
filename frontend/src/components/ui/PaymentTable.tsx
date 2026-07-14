@@ -1,4 +1,4 @@
-import type { PaymentRow } from '../types';
+import type { PaymentRow } from '../../types';
 
 export interface PaymentTableProps {
   payments: PaymentRow[];

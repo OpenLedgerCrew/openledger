@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { cn } from "./lib/utils";
-import { Header } from "./Header";
-import { Footer } from "./Footer";
+import { cn } from "../lib/utils";
+import { Header } from "../Header";
+import { Footer } from "../Footer";
 
 interface PageShellProps {
   children: ReactNode;

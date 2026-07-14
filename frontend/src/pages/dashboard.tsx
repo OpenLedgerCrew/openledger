@@ -1,9 +1,9 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { Container, PageShell, Section } from "../components/PageShell";
-import { SiteAlert } from "../components/SiteAlert";
-import { StatCard } from "../components/StatCard";
+import { Container, PageShell, Section } from "../components/ui/PageShell";
+import { SiteAlert } from "../components/ui/SiteAlert";
+import { StatCard } from "../components/ui/StatCard";
 import { Button } from "../components/ui/button";
 
 export default function HomePage() {
@@ -59,11 +59,7 @@ export default function HomePage() {
         </Container>
       </Section>
 
-      <SiteAlert>
-        The figures shown are based on test data. Physical delivery is
-        confirmed through SAPCONE's field partners and verified on the Stellar
-        blockchain.
-      </SiteAlert>
+      
     </PageShell>
   );
 }

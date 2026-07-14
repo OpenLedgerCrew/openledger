@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Search } from "lucide-react";
-import { Logo } from "./Logo";
+import { Logo } from "./ui/Logo";
 import { Button } from "./ui/button";
 import { cn } from "./lib/utils";
 
@@ -17,10 +17,9 @@ interface HeaderProps {
 
 export function Header({ showSearch = false }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
+<header className="sticky top-0 z-40 border-b border-border/60 bg-[#f3e7c4] backdrop-blur">      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <Logo />
-
+        <div className="h-6 w-82 "></div>
         <nav className="hidden items-center gap-1 md:flex">
           {NAV.map((item) => (
             <NavLink
@@ -29,7 +28,7 @@ export function Header({ showSearch = false }: HeaderProps) {
               end={item.to === "/"}
               className={({ isActive }) =>
                 cn(
-                  "rounded-md px-3 py-1.5 text-sm transition-colors",
+                  "rounded-md px-10 py-1.5 text-sm transition-colors",
                   isActive
                     ? "font-medium text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -52,10 +51,6 @@ export function Header({ showSearch = false }: HeaderProps) {
               />
             </div>
           )}
-
-          <Button size="sm" className="px-4">
-            Donate
-          </Button>
         </div>
       </div>
     </header>
