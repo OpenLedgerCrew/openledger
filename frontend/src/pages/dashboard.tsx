@@ -158,13 +158,6 @@ export default function HomePage() {
         </Container>
       </Section>
 
-      {/* Alert */}
-
-      <SiteAlert>
-        This portal shows fund movement only. Physical delivery is confirmed
-        through SAPCONE's field processes and verified on the blockchain.
-      </SiteAlert>
-
       {/* How It Works */}
 
       <Section className="py-16">
@@ -241,7 +234,7 @@ export default function HomePage() {
           </div>
         </Container>
       </Section>
-      
+
     </PageShell>
   );
 }

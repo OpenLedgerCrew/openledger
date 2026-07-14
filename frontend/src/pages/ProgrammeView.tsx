@@ -243,7 +243,7 @@ const ProgrammeView: React.FC = () => {
                   gap: 8,
                 }}
               >
-                <span>📅</span>
+          
                 {programme.period}
               </p>
 
@@ -305,26 +305,6 @@ const ProgrammeView: React.FC = () => {
           ))}
         </div>
 
-        <div
-          style={{
-            marginTop: 28,
-            backgroundColor: "#fef3c7",
-            border: "1px solid #fde68a",
-            borderRadius: 18,
-            padding: "18px 22px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <span style={{ fontSize: 18 }}>⚠️</span>
-          <p
-            style={{ margin: 0, color: "#92400e", fontSize: 14, maxWidth: 900 }}
-          >
-            Attention: This portal shows funds movement. Physical delivery is
-            confirmed through SAPCONE's field processes.
-          </p>
-        </div>
       </div>
       <Footer />
     </div>
