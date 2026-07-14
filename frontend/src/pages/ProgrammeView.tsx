@@ -210,7 +210,7 @@ const ProgrammeView: React.FC = () => {
                       lineHeight: 1.2,
                     }}
                   >
-                    {programme.emoji} {programme.title}
+                    {programme.title}
                   </h2>
                 </div>
                 <span
