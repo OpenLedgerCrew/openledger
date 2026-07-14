@@ -32,7 +32,7 @@ export function Header({ showSearch = false }: HeaderProps) {
                   "rounded-md px-3 py-1.5 text-sm transition-colors",
                   isActive
                     ? "font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
                 )
               }
             >
@@ -52,10 +52,6 @@ export function Header({ showSearch = false }: HeaderProps) {
               />
             </div>
           )}
-
-          <Button size="sm" className="px-4">
-            Donate
-          </Button>
         </div>
       </div>
     </header>
