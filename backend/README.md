@@ -5,6 +5,10 @@ LastMile delivery confirmations (via the SDP fork), strips PII at the boundary, 
 programme metrics, and deep-links settled payments to the public Stellar explorer. See
 `../OpenLedger Documentation.md` for the full PRD and `docs/OPEN_ITEMS.md` for open questions.
 
+Built on **Express** (`src/index.ts`). The PRD allows "Fastify or Express" (§2.3); this backend
+was rewritten from an initial Fastify scaffold to Express per the team's preference — see
+`docs/DECISIONS.md` (SD-1).
+
 ## Requirements
 
 - Node.js (see `tsconfig.json` for target — ES2022/ESNext)
@@ -56,6 +60,9 @@ unreachable rather than crashing.
 npm test          # vitest run — unit, integration, acceptance suites
 npm run typecheck # tsc --noEmit
 ```
+
+Acceptance tests hit the real Express app via `supertest` (no server bound to a port — supertest
+manages an ephemeral listener per request); the SDP fork is the only faked boundary.
 
 Two auth-related tests are intentionally `it.skip` (OI-2 — server-to-fork auth mechanism is an
 open item, not yet implemented against a guessed scheme). Everything else should pass.
