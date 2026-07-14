@@ -11,7 +11,6 @@ const programmes = [
     reach: "847",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "🌱",
   },
   {
     title: "Kakuma Refugee Programme",
@@ -22,7 +21,6 @@ const programmes = [
     reach: "612",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "🏕️",
   },
   {
     title: "Omo Valley Cross-Border Programme",
@@ -33,7 +31,6 @@ const programmes = [
     reach: "423",
     status: "On Hold",
     statusColor: "#d97706",
-    emoji: "🌏",
   },
   {
     title: "Kakuma Health & Nutrition Programme",
@@ -44,7 +41,6 @@ const programmes = [
     reach: "356",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "❤️",
   },
 ];
 
