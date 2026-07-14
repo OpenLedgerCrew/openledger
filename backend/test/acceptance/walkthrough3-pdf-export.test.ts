@@ -1,5 +1,6 @@
 import pdfParse from 'pdf-parse/lib/pdf-parse.js';
-import { afterAll, describe, expect, it } from 'vitest';
+import request from 'supertest';
+import { describe, expect, it } from 'vitest';
 import { buildApp } from '../../src/index';
 import {
   EXPLORER_BASE,
@@ -17,10 +18,12 @@ const app = buildApp({
   explorerBaseUrl: EXPLORER_BASE,
 });
 
-afterAll(() => app.close());
-
 function exportPdf() {
-  return app.inject({ method: 'GET', url: `/programmes/${programme.id}/export.pdf` });
+  return request(app).get(`/programmes/${programme.id}/export.pdf`).buffer(true).parse((res, callback) => {
+    const chunks: Buffer[] = [];
+    res.on('data', (chunk: Buffer) => chunks.push(chunk));
+    res.on('end', () => callback(null, Buffer.concat(chunks)));
+  });
 }
 
 /** PDF extraction mangles line breaks; compare with collapsed whitespace on both sides. */
@@ -29,15 +32,15 @@ const normalize = (s: string) => s.replace(/\s+/g, ' ').trim();
 describe('walkthrough 3 — PDF export (doc section 6.3)', () => {
   it('6.3 item 1 — clicking export produces a downloadable PDF', async () => {
     const res = await exportPdf();
-    expect(res.statusCode).toBe(200);
+    expect(res.status).toBe(200);
     expect(res.headers['content-type']).toContain('application/pdf');
-    expect(res.rawPayload.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    expect((res.body as Buffer).subarray(0, 5).toString('latin1')).toBe('%PDF-');
   });
 
   it('6.3 item 2 — the PDF contains programme name, aggregates, the full payment table, the section 4.5 disclosure in full, and a generation timestamp', async () => {
     const res = await exportPdf();
-    expect(res.statusCode).toBe(200);
-    const { text } = await pdfParse(res.rawPayload);
+    expect(res.status).toBe(200);
+    const { text } = await pdfParse(res.body as Buffer);
     const pdfText = normalize(text);
 
     expect(pdfText).toContain(programme.name);
@@ -72,8 +75,8 @@ describe('walkthrough 3 — PDF export (doc section 6.3)', () => {
 
   it('6.3 item 3 — the extracted PDF text contains zero PII (section 4.3 field list)', async () => {
     const res = await exportPdf();
-    expect(res.statusCode).toBe(200);
-    const { text } = await pdfParse(res.rawPayload);
+    expect(res.status).toBe(200);
+    const { text } = await pdfParse(res.body as Buffer);
     // The fixture smuggles PII into the fork payload, so this proves the export strips it
     // (section 4.4: "not in the PDF").
     for (const value of PII_VALUES) {

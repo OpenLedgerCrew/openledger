@@ -1,7 +1,8 @@
-import type { FastifyInstance } from 'fastify';
+import { Router } from 'express';
+import type { AppInstance } from '../index';
 import { DISCLOSURE_FULL } from '../constants/disclosure';
-import type { RawPaymentRecord } from '../types/payment';
 import { buildProgrammeReadModel, type ProgrammeReadModel } from '../services/readModel';
+import type { RawPaymentRecord } from '../types/payment';
 
 const PAGE_SIZE = 25;
 
@@ -10,10 +11,12 @@ const PAGE_SIZE = 25;
  * 4.5 disclosure, and the paginated payment table in one response, with no login (O-5:
  * "works from a cold link, with no login and no training").
  */
-export async function programmeRoutes(app: FastifyInstance): Promise<void> {
-  app.get('/programmes/:programmeId', async (request) => {
-    const { programmeId } = request.params as { programmeId: string };
-    const { page: pageParam } = request.query as { page?: string };
+export function programmeRoutes(app: AppInstance): Router {
+  const router = Router();
+
+  router.get('/programmes/:programmeId', async (req, res) => {
+    const { programmeId } = req.params;
+    const pageParam = req.query.page as string | undefined;
     const { forkClient, explorerBaseUrl } = app.deps;
 
     const cacheKey = `readmodel:${programmeId}`;
@@ -34,13 +37,10 @@ export async function programmeRoutes(app: FastifyInstance): Promise<void> {
 
     const totalItems = readModel.views.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-    const page = Math.min(
-      totalPages,
-      Math.max(1, Number.parseInt(pageParam ?? '1', 10) || 1),
-    );
+    const page = Math.min(totalPages, Math.max(1, Number.parseInt(pageParam ?? '1', 10) || 1));
     const start = (page - 1) * PAGE_SIZE;
 
-    return {
+    res.json({
       programme_id: programmeId,
       aggregates: readModel.aggregates,
       disclosure: DISCLOSURE_FULL,
@@ -51,6 +51,8 @@ export async function programmeRoutes(app: FastifyInstance): Promise<void> {
         total_items: totalItems,
         total_pages: totalPages,
       },
-    };
+    });
   });
+
+  return router;
 }

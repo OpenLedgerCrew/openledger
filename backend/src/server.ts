@@ -30,13 +30,12 @@ const app = buildApp(
   { logger: true },
 );
 
-app
-  .listen({ port: PORT, host: HOST })
-  .then(() => {
-    const source = SDP_FORK_BASE_URL ? `SDP fork at ${SDP_FORK_BASE_URL}` : 'in-memory seed data';
-    app.log.info(`OpenLedger backend listening on ${HOST}:${PORT} (data source: ${source})`);
-  })
-  .catch((err) => {
-    app.log.error(err);
-    process.exit(1);
-  });
+const server = app.listen(PORT, HOST, () => {
+  const source = SDP_FORK_BASE_URL ? `SDP fork at ${SDP_FORK_BASE_URL}` : 'in-memory seed data';
+  console.log(`OpenLedger backend listening on ${HOST}:${PORT} (data source: ${source})`);
+});
+
+server.on('error', (err) => {
+  console.error(err);
+  process.exit(1);
+});

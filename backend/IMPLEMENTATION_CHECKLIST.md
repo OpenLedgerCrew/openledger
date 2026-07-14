@@ -1,10 +1,18 @@
 # OpenLedger Backend — Implementation Checklist
 
 A feature is checked **only** when its test(s) pass **and** the behavior is verified against the
-running server. Last verified: 2026-07-14. Commands: `npm run typecheck`, `npm test`, `npm start`.
+running server. Last verified: 2026-07-14 (Express rewrite). Commands: `npm run typecheck`,
+`npm test`, `npm start`.
 
 Status: **42 tests pass, 2 skipped** (the OI-2 auth tests, intentionally skipped), typecheck clean,
 server boots and serves correct data on all three endpoints.
+
+**Framework: Express, not Fastify.** The backend was originally scaffolded on Fastify (PRD §2.3
+allows either); it was rewritten to Express because the team isn't used to Fastify. See
+`docs/DECISIONS.md` SD-1/SD-4 for the record. Every service (`piiFilter`, `aggregation`, `cache`,
+`sdpForkClient`, etc.) is framework-agnostic and was untouched by the rewrite — only `src/index.ts`,
+the three `src/routes/*.ts` files, `src/server.ts`, and the acceptance tests (now using `supertest`
+instead of `fastify.inject()`) changed.
 
 ## Services
 
@@ -33,7 +41,7 @@ server boots and serves correct data on all three endpoints.
 
 ## Wiring / runtime
 
-- [x] `buildApp` decorates deps + per-app `ReadModelCache`; registers `@fastify/cors` (GET-only, public read surface).
+- [x] `buildApp` attaches deps + per-app `ReadModelCache` to the Express app instance; registers `cors` middleware (GET-only, public read surface).
 - [x] `server.ts` — seed client by default; real HTTP client when `SDP_FORK_BASE_URL` is set; logger on, boots and prints host:port + data source.
 - [x] Frontend alignment — response shapes match `frontend/src/types.ts` (`PaymentRow`, `ProgrammeAggregates`, `DeliveryView`); CORS lets Vite (:5173) consume the API.
 
@@ -53,3 +61,4 @@ server boots and serves correct data on all three endpoints.
 
 - Renamed the `SdpForkClient` read method `getDeliveryConfirmations` → `getDeliveries`: the scaffold's own §3.1.2 "pure consumer" test forbids any method name containing a write-verb, and "Confirmations" matched `/confirm/`. The rename keeps that test meaningful. Updated interface, impl, seed/fallback clients, routes, and the test fake.
 - `standardFixture` filler rows (REF-007…REF-030) changed from USDC to XLM. As written they made the USDC total 2550.00, contradicting the `150.00` that both walkthrough3 and the §5.4 aggregation canon assert; the filler loop's own comment says it exists only to force pagination. XLM fillers keep pagination + mixed assets while the headline USDC total is 150.00 (REF-001 + REF-003).
+- Rewrote the framework from Fastify to Express (team request, both allowed by PRD §2.3). `buildApp` now returns an Express app; the three route files are `Router` factories; `server.ts` uses `app.listen(port, host, cb)`. The four acceptance tests were ported from `app.inject()` to `supertest` — same assertions, same coverage, no test intent changed. All 9 test files still pass (42/44, 2 intentionally skipped).
