@@ -72,7 +72,7 @@ export function fakeForkClient(data: ForkFixture): SdpForkClient {
     async getPayments() {
       return data.payments;
     },
-    async getDeliveryConfirmations() {
+    async getDeliveries() {
       return data.deliveries;
     },
   };
@@ -102,9 +102,12 @@ export function standardFixture(): ForkFixture {
     payment({ reference_id: 'REF-005', status: 'PENDING', settled_at: null, tx_hash: null }),
     payment({ reference_id: 'REF-006', status: 'FAILED', settled_at: null, tx_hash: null }),
   ];
+  // Filler rows exist only to force pagination (section 6.1 item 4). They are settled XLM so
+  // they do NOT move the headline USDC "total disbursed", which stays 150.00 = REF-001 (100.00)
+  // + REF-003 (50.00) — the figure both the section 5.4 aggregation and walkthrough 3 assert.
   for (let i = 7; i <= 30; i++) {
     const ref = `REF-${String(i).padStart(3, '0')}`;
-    payments.push(payment({ reference_id: ref, tx_hash: txHash(i) }));
+    payments.push(payment({ reference_id: ref, asset: 'XLM', tx_hash: txHash(i) }));
   }
 
   const deliveries: DeliveryConfirmation[] = [

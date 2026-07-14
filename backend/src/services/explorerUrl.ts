@@ -7,5 +7,5 @@
  * from the hash, with no fetch."
  */
 export function buildExplorerUrl(txHash: string, baseUrl: string): string {
-  throw new Error('Not implemented');
+  return `${baseUrl}/tx/${txHash}`;
 }
