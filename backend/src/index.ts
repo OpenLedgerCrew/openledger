@@ -17,7 +17,7 @@ declare module 'fastify' {
 }
 
 export function buildApp(deps: AppDeps): FastifyInstance {
-  const app = Fastify();
+  const app = Fastify({ logger: true });
   app.decorate('deps', deps);
   app.register(programmeRoutes);
   app.register(paymentRoutes);
