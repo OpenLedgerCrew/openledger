@@ -1,7 +1,7 @@
 import { buildApp } from './index';
 import { createSdpForkClient, type SdpForkClient } from './services/sdpForkClient';
 
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3002;
 const HOST = process.env.HOST || '0.0.0.0';
 const SDP_FORK_BASE_URL = process.env.SDP_FORK_BASE_URL || 'http://localhost:4000';
 const EXPLORER_BASE_URL =
