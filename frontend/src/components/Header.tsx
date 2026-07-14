@@ -7,8 +7,7 @@ import { cn } from "./lib/utils";
 const NAV = [
   { to: "/", label: "Home" },
   { to: "/programmes", label: "Programmes" },
-  { to: "/about", label: "About" },
-  { to: "/contact", label: "Contact" },
+  { to: "/export", label: "Export PDF" },
 ] as const;
 
 interface HeaderProps {
