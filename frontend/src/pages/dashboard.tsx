@@ -1,29 +1,28 @@
-import { ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Container, PageShell, Section } from "../components/ui/PageShell";
-import { SiteAlert } from "../components/ui/SiteAlert";
 import { StatCard } from "../components/ui/StatCard";
 import { Button } from "../components/ui/button";
 
 const programmes = [
   {
-    title: "Drought Relief 2024",
-    description: "Emergency water and food supply distribution.",
+    title: "Turkana Livelihoods Programme",
+    description: "Cash transfers for fisherfolk in Kalokol, Turkana County",
     amount: "5.2M KES",
-    beneficiaries: "825",
+    beneficiaries: "847",
   },
   {
-    title: "Education Support",
-    description: "Direct cash transfers for school fees.",
+    title: "Kakuma Refugee Programme",
+    description: "Cash assistance for refugee families in Kakuma camp",
     amount: "3.8M KES",
     beneficiaries: "612",
   },
   {
-    title: "Livestock Restocking",
-    description: "Restoring pastoral livelihoods.",
-    amount: "7.1M KES",
-    beneficiaries: "960",
+    title: "Omo Valley Cross-Border Programme",
+    description: "Cross-border cash transfers for pastoralists in Omo region",
+    amount: "2.1M KES",
+    beneficiaries: "423",
   },
 ];
 
@@ -31,18 +30,17 @@ export default function HomePage() {
   return (
     <PageShell>
       {/* Hero */}
-
       <Section className="pt-16 pb-12">
         <Container className="text-center">
           <span className="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700">
             ● NGO Transparency Portal
           </span>
 
-          <h1 className="mt-6 text-5xl font-bold">
+          <h1 className="mt-6 text-5xl font-bold font-serif" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
             Open<span className="text-green-700">Ledger</span>
           </h1>
 
-          <p className="mt-3 text-xl text-green-700">
+          <p className="mt-3 text-xl text-green-700 font-semibold">
             Transparency. Verifiable. Public.
           </p>
 
@@ -59,15 +57,16 @@ export default function HomePage() {
               </Link>
             </Button>
 
-            <Button variant="outline">
-              Learn More
+            <Button variant="outline" asChild>
+              <Link to="/about">
+                Learn More
+              </Link>
             </Button>
           </div>
         </Container>
       </Section>
 
       {/* Stats */}
-
       <Section className="pb-10">
         <Container>
           <div className="grid gap-4 md:grid-cols-4">
@@ -97,12 +96,11 @@ export default function HomePage() {
       </Section>
 
       {/* Programmes */}
-
       <Section className="pb-12">
         <Container>
-          <div className="mb-8 flex justify-between">
+          <div className="mb-8 flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold">
+              <h2 className="text-3xl font-bold font-serif" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
                 Current Programmes
               </h2>
 
@@ -113,7 +111,7 @@ export default function HomePage() {
 
             <Link
               to="/programmes"
-              className="text-sm text-green-700"
+              className="text-sm text-green-700 font-semibold"
             >
               See all programmes →
             </Link>
@@ -123,21 +121,23 @@ export default function HomePage() {
             {programmes.map((programme) => (
               <div
                 key={programme.title}
-                className="rounded-lg border border-green-200 bg-yellow-50 p-6 shadow-sm transition hover:shadow-md"
+                className="rounded-lg border border-green-200 bg-yellow-50 p-6 shadow-sm transition hover:shadow-md flex flex-col justify-between"
               >
-                <div className="mb-3 flex justify-between">
-                  <h3 className="font-semibold">
-                    {programme.title}
-                  </h3>
+                <div>
+                  <div className="mb-3 flex justify-between">
+                    <h3 className="font-bold font-serif" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
+                      {programme.title}
+                    </h3>
 
-                  <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700">
-                    Active
-                  </span>
+                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 font-semibold h-fit">
+                      Active
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-600">
+                    {programme.description}
+                  </p>
                 </div>
-
-                <p className="text-sm text-gray-600">
-                  {programme.description}
-                </p>
 
                 <div className="mt-6">
                   <div className="text-2xl font-bold">
@@ -147,39 +147,34 @@ export default function HomePage() {
                   <div className="text-xs text-muted-foreground">
                     {programme.beneficiaries} beneficiaries
                   </div>
+                  
+                  <Link
+                    to={`/programmes?select=${programme.title.replace(/\s+/g, "-").toLowerCase()}`}
+                    className="mt-5 inline-block text-sm font-semibold text-green-700 hover:text-green-800"
+                  >
+                    VIEW →
+                  </Link>
                 </div>
-
-                <button className="mt-5 text-sm font-semibold text-green-700">
-                  VIEW
-                </button>
               </div>
             ))}
           </div>
         </Container>
       </Section>
 
-      {/* Alert */}
-
-      <SiteAlert>
-        This portal shows fund movement only. Physical delivery is confirmed
-        through SAPCONE's field processes and verified on the blockchain.
-      </SiteAlert>
-
       {/* How It Works */}
-
       <Section className="py-16">
         <Container>
           <div className="grid gap-8 md:grid-cols-2">
 
             <div className="rounded-lg bg-stone-100 p-8">
-              <h2 className="mb-8 text-3xl font-bold">
+              <h2 className="mb-8 text-3xl font-bold font-serif" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
                 How It Works
               </h2>
 
               <div className="space-y-8">
 
                 <div className="flex gap-4">
-                  <CheckCircle className="text-green-600" />
+                  <span style={{ color: "#5da76e", fontSize: "20px" }}>✓</span>
                   <div>
                     <h3 className="font-semibold">
                       Funds deposited
@@ -191,7 +186,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <CheckCircle className="text-green-600" />
+                  <span style={{ color: "#5da76e", fontSize: "20px" }}>✓</span>
                   <div>
                     <h3 className="font-semibold">
                       Immutable Tracking
@@ -203,7 +198,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <CheckCircle className="text-green-600" />
+                  <span style={{ color: "#5da76e", fontSize: "20px" }}>✓</span>
                   <div>
                     <h3 className="font-semibold">
                       Field Verification
@@ -228,12 +223,12 @@ export default function HomePage() {
                 <div className="h-3 w-2/3 rounded bg-gray-200"></div>
               </div>
 
-              <div className="mt-10 rounded border bg-green-50 p-4 text-center text-green-700">
+              <div className="mt-10 rounded border bg-green-50 p-4 text-center text-green-700 font-semibold">
                 Verified on Stellar
               </div>
 
               <div className="mt-8 flex items-center gap-2 text-xl font-bold">
-                <CheckCircle className="text-green-600" />
+                <span style={{ color: "#5da76e" }}>✓</span>
                 Verified
               </div>
             </div>
@@ -241,7 +236,6 @@ export default function HomePage() {
           </div>
         </Container>
       </Section>
-      
     </PageShell>
   );
 }
