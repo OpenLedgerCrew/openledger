@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
-import { DisclosureBanner } from "../components/DisclosureBanner";
 import { ProgrammeDetailModal } from "../components/ProgrammeDetailModal";
 
 const programmes = [
@@ -14,7 +14,8 @@ const programmes = [
     reach: "847",
     status: "Active",
     statusColor: "#10b981",
-    
+    location: "Turkana",
+    emoji: "🌱",
   },
   {
     title: "Kakuma Refugee Programme",
@@ -25,7 +26,8 @@ const programmes = [
     reach: "612",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "🏕️",
+    location: "Kakuma",
+    emoji: "⛺",
   },
   {
     title: "Omo Valley Cross-Border Programme",
@@ -36,7 +38,8 @@ const programmes = [
     reach: "423",
     status: "On Hold",
     statusColor: "#d97706",
-    emoji: "🌏",
+    location: "Omo Valley",
+    emoji: "🌍",
   },
   {
     title: "Kakuma Health & Nutrition Programme",
@@ -47,7 +50,8 @@ const programmes = [
     reach: "356",
     status: "Active",
     statusColor: "#10b981",
-    emoji: "❤️",
+    location: "Kakuma",
+    emoji: "🏥",
   },
 ];
 
@@ -62,16 +66,46 @@ export interface ProgrammeViewProps {
   programmeId?: string;
 }
 
-export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => {
-  const [selectedProg, setSelectedProg] = useState<(typeof programmes)[0] | null>(null);
+export const ProgrammeView: React.FC<ProgrammeViewProps> = ({
+  programmeId,
+}) => {
+  const [selectedProg, setSelectedProg] = useState<
+    (typeof programmes)[0] | null
+  >(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const selectParam = searchParams.get("select");
+    if (selectParam) {
+      const matched = programmes.find(
+        (p) => p.title.replace(/\s+/g, "-").toLowerCase() === selectParam,
+      );
+      if (matched) {
+        setSelectedProg(matched);
+      }
+    }
+  }, [searchParams]);
+
+  const filteredProgrammes = programmes.filter((p) => {
+    const query = searchQuery.toLowerCase().trim();
+    const matchesSearch =
+      p.title.toLowerCase().includes(query) ||
+      p.location.toLowerCase().includes(query) ||
+      p.description.toLowerCase().includes(query);
+
+    const matchesStatus = selectedStatus === "" || p.status === selectedStatus;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div
       style={{
         minHeight: "100vh",
         backgroundColor: "#fcf5ec",
-        color: "#111827",
-        fontFamily: "Inter, system-ui, sans-serif",
+        color: "#1a1714",
       }}
     >
       <Header />
@@ -82,7 +116,7 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => 
           <div
             style={{
               display: "flex",
-              alignItems: "baseline",
+              alignItems: "center",
               justifyContent: "space-between",
               flexWrap: "wrap",
               gap: 16,
@@ -93,7 +127,14 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => 
               <p style={{ margin: 0, fontSize: 14, color: "#6b7280" }}>
                 Browse all SAPCONE programmes and verify payments
               </p>
-              <h1 style={{ margin: "8px 0 0", fontSize: 36, fontWeight: 700 }}>
+              <h1
+                style={{
+                  margin: "8px 0 0",
+                  fontSize: 36,
+                  fontWeight: 700,
+                  fontFamily: "Fraunces, Georgia, serif",
+                }}
+              >
                 All Programmes
               </h1>
             </div>
@@ -138,6 +179,7 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => 
           </div>
         </section>
 
+        {/* Live Search and Dropdown Filter */}
         <div
           style={{
             display: "flex",
@@ -152,17 +194,19 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => 
               flex: "1 1 320px",
               backgroundColor: "#ffffff",
               borderRadius: 16,
-              padding: 16,
+              padding: "12px 16px",
               display: "flex",
               alignItems: "center",
               gap: 12,
-              border: "1px solid #e5e7eb",
+              border: "1px solid #e5e0d8",
             }}
           >
             <span style={{ color: "#9ca3af", fontSize: 18 }}>🔎</span>
             <input
               type="text"
-              placeholder="Search programmes..."
+              placeholder="Search by name or location (e.g. Turkana)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: "100%",
                 border: "none",
@@ -172,22 +216,30 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => 
               }}
             />
           </div>
-          <button
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
             style={{
               borderRadius: 14,
-              border: "1px solid #d1d5db",
+              border: "1px solid #e5e0d8",
               backgroundColor: "#ffffff",
               padding: "14px 18px",
               fontSize: 14,
               color: "#374151",
               minWidth: 180,
               cursor: "pointer",
+              outline: "none",
             }}
           >
-            Filter by Status ▾
-          </button>
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Completed">Completed</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Pending">Pending</option>
+          </select>
         </div>
 
+        {/* Programmes Cards Grid */}
         <div
           style={{
             display: "grid",
@@ -195,133 +247,176 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => 
             gap: 20,
           }}
         >
-          {programmes.map((programme) => (
+          {filteredProgrammes.map((programme) => (
             <div
               key={programme.title}
               style={{
                 backgroundColor: "#ffffff",
                 borderRadius: 24,
                 padding: 24,
-                border: "1px solid #e5e7eb",
+                border: "1px solid #e5e0d8",
                 boxShadow: "0 8px 30px rgba(15, 23, 42, 0.05)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "between",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 14,
-                }}
-              >
-                <div>
+              <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 14,
+                  }}
+                >
                   <h2
                     style={{
                       margin: 0,
                       fontSize: 20,
                       fontWeight: 700,
                       lineHeight: 1.2,
+                      fontFamily: "Fraunces, Georgia, serif",
                     }}
                   >
                     {programme.title}
                   </h2>
+                  <span
+                    style={{
+                      backgroundColor: programme.statusColor + "1f",
+                      color: programme.statusColor,
+                      padding: "6px 12px",
+                      borderRadius: 9999,
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {programme.status}
+                  </span>
                 </div>
-                <span
+                <p
+                  style={{ margin: "0 0 16px", color: "#6b7280", fontSize: 14 }}
+                >
+                  {programme.description}
+                </p>
+                <p
                   style={{
-                    backgroundColor: programme.statusColor + "1f",
-                    color: programme.statusColor,
-                    padding: "6px 12px",
-                    borderRadius: 9999,
-                    fontSize: 12,
-                    fontWeight: 600,
+                    margin: 0,
+                    color: "#4b5563",
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
                   }}
                 >
-                  {programme.status}
-                </span>
-              </div>
-              <p style={{ margin: "0 0 16px", color: "#6b7280", fontSize: 14 }}>
-                {programme.description}
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  color: "#4b5563",
-                  fontSize: 13,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-          
-                {programme.period}
-              </p>
+                  <span>📅</span>
+                  {programme.period}
+                </p>
 
+                <div
+                  style={{
+                    borderTop: "1px solid #e5e7eb",
+                    margin: "20px 0 0",
+                    paddingTop: 20,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                    gap: 12,
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
+                      Budget
+                    </p>
+                    <p
+                      style={{
+                        margin: "8px 0 0",
+                        fontSize: 16,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {programme.budget}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
+                      Delivery
+                    </p>
+                    <p
+                      style={{
+                        margin: "8px 0 0",
+                        fontSize: 16,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {programme.delivery}
+                    </p>
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
+                      Reach
+                    </p>
+                    <p
+                      style={{
+                        margin: "8px 0 0",
+                        fontSize: 16,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {programme.reach}
+                    </p>
+                  </div>
+                </div>
+              </div>
               <div
                 style={{
-                  borderTop: "1px solid #e5e7eb",
-                  margin: "20px 0 0",
-                  paddingTop: 20,
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                  gap: 12,
-                  textAlign: "left",
+                  marginTop: 20,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
               >
-                <div>
-                  <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
-                    Budget
-                  </p>
-                  <p
-                    style={{ margin: "8px 0 0", fontSize: 16, fontWeight: 700 }}
-                  >
-                    {programme.budget}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
-                    Delivery
-                  </p>
-                  <p
-                    style={{ margin: "8px 0 0", fontSize: 16, fontWeight: 700 }}
-                  >
-                    {programme.delivery}
-                  </p>
-                </div>
-                <div>
-                  <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
-                    Reach
-                  </p>
-                  <p
-                    style={{ margin: "8px 0 0", fontSize: 16, fontWeight: 700 }}
-                  >
-                    {programme.reach}
-                  </p>
-                </div>
-              </div>
-              <div style={{ marginTop: 18 }}>
                 <button
-                  id={`view-programme-${programme.title.replace(/\s+/g, '-').toLowerCase()}`}
+                  id={`view-programme-${programme.title.replace(/\s+/g, "-").toLowerCase()}`}
                   onClick={() => setSelectedProg(programme)}
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#047857",
+                    color: "#5da76e",
                     fontWeight: 700,
-                    textDecoration: "none",
                     cursor: "pointer",
                     padding: 0,
-                    fontSize: "inherit",
+                    fontSize: 14,
                   }}
                 >
                   View Programme →
+                </button>
+                <button
+                  onClick={() =>
+                    window.open(
+                      `/api/programmes/${programme.title.replace(/\s+/g, "-").toLowerCase()}/export.pdf`,
+                      "_blank",
+                    )
+                  }
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#b23f24",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    padding: 0,
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <span>📄</span> PDF
                 </button>
               </div>
             </div>
           ))}
         </div>
-
-      
-        <DisclosureBanner />
       </div>
       <Footer />
 
@@ -329,7 +424,9 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({ programmeId }) => 
       <ProgrammeDetailModal
         open={selectedProg !== null}
         onClose={() => setSelectedProg(null)}
-        programmeId={selectedProg?.title.replace(/\s+/g, '-').toLowerCase() ?? ""}
+        programmeId={
+          selectedProg?.title.replace(/\s+/g, "-").toLowerCase() ?? ""
+        }
         programmeName={selectedProg?.title ?? ""}
         programmeDescription={selectedProg?.description}
         period={selectedProg?.period}
