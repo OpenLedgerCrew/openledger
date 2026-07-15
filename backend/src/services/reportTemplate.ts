@@ -14,12 +14,26 @@ import type { Programme, ProgrammeAggregates } from '../types/programme';
 // the web view (the intent behind D-8). Only filtered PublicPaymentView data reaches this module,
 // so no PII can appear in the report (sections 4.3, 4.4).
 
+export interface ReportSections {
+  includeStats: boolean;
+  includePayments: boolean;
+  includeDelivery: boolean;
+}
+
 export interface ReportData {
   programme: Programme;
   aggregates: ProgrammeAggregates;
   payments: PublicPaymentView[];
   generatedAt: string;
+  /** All sections render when absent (e.g. window.open with no query flags). */
+  sections?: ReportSections;
 }
+
+const DEFAULT_SECTIONS: ReportSections = {
+  includeStats: true,
+  includePayments: true,
+  includeDelivery: true,
+};
 
 const DISCLOSURE_BLOCKS = [
   DISCLOSURE_INTRO,
@@ -43,6 +57,7 @@ function deliveryText(view: PublicPaymentView): string {
 /** Full HTML impact report, rendered to PDF by wkhtmltopdf. Styled with SAPCONE brand colors. */
 export function renderProgrammeReportHtml(data: ReportData): string {
   const { programme, aggregates, payments, generatedAt } = data;
+  const { includeStats, includePayments, includeDelivery } = data.sections ?? DEFAULT_SECTIONS;
 
   const totalsRows = aggregates.totals_by_asset
     .map((t) => `<tr><td style="font-weight: 600;">${escapeHtml(t.asset)}</td><td class="num" style="color: #5da76e; font-weight: 700;">${escapeHtml(t.total)}</td></tr>`)
@@ -50,6 +65,7 @@ export function renderProgrammeReportHtml(data: ReportData): string {
 
   const paymentRows = payments
     .map(
+<<<<<<< HEAD
       (p) => {
         let statusColor = '#1a1714';
         if (p.status === 'SUCCESS') statusColor = '#5da76e';
@@ -66,6 +82,17 @@ export function renderProgrammeReportHtml(data: ReportData): string {
           <td>${escapeHtml(deliveryText(p))}</td>
         </tr>`;
       }
+=======
+      (p) => `<tr>
+        <td>${escapeHtml(p.reference_id)}</td>
+        <td class="num">${escapeHtml(p.amount)}</td>
+        <td>${escapeHtml(p.asset)}</td>
+        <td>${escapeHtml(p.status)}</td>
+        <td>${escapeHtml(p.created_at)}</td>
+        <td>${escapeHtml(p.settled_at ?? p.settlement_label ?? '')}</td>
+        ${includeDelivery ? `<td>${escapeHtml(deliveryText(p))}</td>` : ''}
+      </tr>`,
+>>>>>>> 04b34aa (front end intergration)
     )
     .join('');
 
@@ -74,6 +101,33 @@ export function renderProgrammeReportHtml(data: ReportData): string {
       ? LABEL_DELIVERY_NOT_APPLICABLE
       : `${(aggregates.delivery_rate * 100).toFixed(1)}%`;
 
+<<<<<<< HEAD
+=======
+  const statsSection = includeStats
+    ? `<h2>Aggregate impact</h2>
+  <div class="cards">
+    <div class="card"><div class="k">Payments settled</div><div class="v">${aggregates.payment_count.settled}</div></div>
+    <div class="card"><div class="k">Pending</div><div class="v">${aggregates.payment_count.pending}</div></div>
+    ${includeDelivery ? `<div class="card"><div class="k">Delivery rate</div><div class="v">${deliveryRate}</div></div>` : ''}
+  </div>
+  <table>
+    <thead><tr><th>Asset</th><th class="num">Total disbursed</th></tr></thead>
+    <tbody>${totalsRows}</tbody>
+  </table>
+  ${includeDelivery ? `<div class="muted">Delivery basis — confirmed: ${aggregates.rate_basis.confirmed}, awaiting: ${aggregates.rate_basis.awaiting_confirmation}, no delivery record: ${aggregates.rate_basis.excluded_no_delivery_record}.</div>` : ''}`
+    : '';
+
+  const paymentsSection = includePayments
+    ? `<h2>Payments</h2>
+  <table>
+    <thead><tr><th>Reference</th><th class="num">Amount</th><th>Asset</th><th>Status</th><th>Created</th><th>Settled</th>${includeDelivery ? '<th>Delivery</th>' : ''}</tr></thead>
+    <tbody>${paymentRows}</tbody>
+  </table>`
+    : '';
+
+  const disclosureParas = DISCLOSURE_BLOCKS.map((b) => `<p>${escapeHtml(b)}</p>`).join('');
+
+>>>>>>> 04b34aa (front end intergration)
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -100,6 +154,7 @@ export function renderProgrammeReportHtml(data: ReportData): string {
   <h1>${escapeHtml(programme.name)}</h1>
   <div class="muted">Programme ID: ${escapeHtml(programme.id)} · Generated ${escapeHtml(generatedAt)} (${escapeHtml(aggregates.timezone)})</div>
 
+<<<<<<< HEAD
   <h2>Aggregate Impact</h2>
   <div class="cards">
     <div class="card"><div class="k">Payments Settled</div><div class="v">${aggregates.payment_count.settled}</div></div>
@@ -117,6 +172,17 @@ export function renderProgrammeReportHtml(data: ReportData): string {
     <thead><tr><th>Reference</th><th class="num">Amount</th><th>Asset</th><th>Status</th><th>Created</th><th>Settled</th><th>Delivery</th></tr></thead>
     <tbody>${paymentRows}</tbody>
   </table>
+=======
+  ${statsSection}
+
+  ${paymentsSection}
+
+  <h2>How to read this page</h2>
+  <div class="disclosure">
+    <h3>${escapeHtml(DISCLOSURE_HEADING)}</h3>
+    ${disclosureParas}
+  </div>
+>>>>>>> 04b34aa (front end intergration)
 </body>
 </html>`;
 }
@@ -126,12 +192,14 @@ export function renderProgrammeReportHtml(data: ReportData): string {
  */
 export function renderProgrammeReportLines(data: ReportData): string[] {
   const { programme, aggregates, payments, generatedAt } = data;
+  const { includeStats, includePayments, includeDelivery } = data.sections ?? DEFAULT_SECTIONS;
   const lines: string[] = [];
 
   lines.push(programme.name);
   lines.push(`Programme ID: ${programme.id}`);
   lines.push(`Generated ${generatedAt} (${aggregates.timezone})`);
   lines.push('');
+<<<<<<< HEAD
   lines.push('Aggregate Impact');
   for (const t of aggregates.totals_by_asset) {
     lines.push(`Total disbursed (${t.asset}): ${t.total}`);
@@ -146,10 +214,43 @@ export function renderProgrammeReportLines(data: ReportData): string[] {
   lines.push('Payments');
   lines.push('Reference | Amount | Asset | Status | Created | Settled | Delivery');
   for (const p of payments) {
+=======
+
+  if (includeStats) {
+    lines.push('Aggregate impact');
+    for (const t of aggregates.totals_by_asset) {
+      lines.push(`Total disbursed (${t.asset}): ${t.total}`);
+    }
+>>>>>>> 04b34aa (front end intergration)
     lines.push(
-      `${p.reference_id} | ${p.amount} | ${p.asset} | ${p.status} | ${p.created_at} | ${p.settled_at ?? p.settlement_label ?? ''} | ${deliveryText(p)}`,
+      `Payments — settled: ${aggregates.payment_count.settled}, pending: ${aggregates.payment_count.pending}, failed: ${aggregates.payment_count.failed}, total: ${aggregates.payment_count.total}`,
     );
+    if (includeDelivery) {
+      lines.push(
+        `Delivery rate: ${aggregates.delivery_rate === null ? 'n/a' : `${(aggregates.delivery_rate * 100).toFixed(1)}%`} (confirmed ${aggregates.rate_basis.confirmed} / awaiting ${aggregates.rate_basis.awaiting_confirmation}, excluded ${aggregates.rate_basis.excluded_no_delivery_record})`,
+      );
+    }
+    lines.push('');
   }
+<<<<<<< HEAD
+=======
+
+  if (includePayments) {
+    lines.push('Payments');
+    lines.push(
+      `Reference | Amount | Asset | Status | Created | Settled${includeDelivery ? ' | Delivery' : ''}`,
+    );
+    for (const p of payments) {
+      lines.push(
+        `${p.reference_id} | ${p.amount} | ${p.asset} | ${p.status} | ${p.created_at} | ${p.settled_at ?? p.settlement_label ?? ''}${includeDelivery ? ` | ${deliveryText(p)}` : ''}`,
+      );
+    }
+    lines.push('');
+  }
+
+  lines.push(DISCLOSURE_HEADING);
+  for (const block of DISCLOSURE_BLOCKS) lines.push(block);
+>>>>>>> 04b34aa (front end intergration)
 
   return lines;
 }

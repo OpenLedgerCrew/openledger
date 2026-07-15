@@ -14,7 +14,7 @@ export function PaymentDetail({ programmeId, referenceId }: PaymentDetailProps) 
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/programmes/${programmeId}/payments/${referenceId}`)
+    fetch(`/api/programmes/${programmeId}/payments/${referenceId}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to load payment detail");
