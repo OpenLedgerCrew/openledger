@@ -168,7 +168,7 @@ export function ProgrammeDetailModal({
                   {status}
                 </span>
               </div>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1a1714", lineHeight: 1.2 }}>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#1a1714", lineHeight: 1.2, fontFamily: "Fraunces, Georgia, serif" }}>
                 {programmeName}
               </h2>
               {programmeDescription && (

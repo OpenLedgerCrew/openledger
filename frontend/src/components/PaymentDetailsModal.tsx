@@ -222,7 +222,7 @@ export function PaymentDetailsModal({
 
           {/* Verifiable Steps */}
           <div style={{ borderTop: "1px solid #e5e0d8", paddingTop: 18, marginBottom: 20 }}>
-            <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: "#1a1714" }}>
+            <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: "#1a1714", fontFamily: "Fraunces, Georgia, serif" }}>
               Verifiable Steps
             </p>
 
@@ -290,35 +290,16 @@ export function PaymentDetailsModal({
               </div>
             )}
           </div>
-
-          {/* Disclosure */}
-          <div
-            style={{
-              borderRadius: 12,
-              border: "1px solid #fde68a",
-              backgroundColor: "#fef3c7",
-              padding: "12px 16px",
-              display: "flex",
-              gap: 10,
-              alignItems: "flex-start",
-            }}
-          >
-            <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>⚠️</span>
-            <p style={{ margin: 0, fontSize: 12, color: "#92400e", lineHeight: 1.5 }}>
-              This portal shows funds movement only. Physical delivery is confirmed through SAPCONE's
-              field processes and verified on the Stellar blockchain.
-            </p>
-          </div>
         </div>
-      </div>
 
-      <style>{`
-        @keyframes pdFadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pdSlideUp {
-          from { opacity: 0; transform: translateY(28px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
+        <style>{`
+          @keyframes pdFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes pdSlideUp {
+            from { opacity: 0; transform: translateY(28px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
+      </div>
     </div>
   );
 }

@@ -40,25 +40,32 @@ function deliveryText(view: PublicPaymentView): string {
   return view.delivery.label;
 }
 
-/** Full HTML impact report, rendered to PDF by Puppeteer (the primary path, section 2.3). */
+/** Full HTML impact report, rendered to PDF by wkhtmltopdf. Styled with SAPCONE brand colors. */
 export function renderProgrammeReportHtml(data: ReportData): string {
   const { programme, aggregates, payments, generatedAt } = data;
 
   const totalsRows = aggregates.totals_by_asset
-    .map((t) => `<tr><td>${escapeHtml(t.asset)}</td><td class="num">${escapeHtml(t.total)}</td></tr>`)
+    .map((t) => `<tr><td style="font-weight: 600;">${escapeHtml(t.asset)}</td><td class="num" style="color: #5da76e; font-weight: 700;">${escapeHtml(t.total)}</td></tr>`)
     .join('');
 
   const paymentRows = payments
     .map(
-      (p) => `<tr>
-        <td>${escapeHtml(p.reference_id)}</td>
-        <td class="num">${escapeHtml(p.amount)}</td>
-        <td>${escapeHtml(p.asset)}</td>
-        <td>${escapeHtml(p.status)}</td>
-        <td>${escapeHtml(p.created_at)}</td>
-        <td>${escapeHtml(p.settled_at ?? p.settlement_label ?? '')}</td>
-        <td>${escapeHtml(deliveryText(p))}</td>
-      </tr>`,
+      (p) => {
+        let statusColor = '#1a1714';
+        if (p.status === 'SUCCESS') statusColor = '#5da76e';
+        else if (p.status === 'FAILED') statusColor = '#b23f24';
+        else if (p.status === 'PENDING') statusColor = '#d97706';
+
+        return `<tr>
+          <td style="font-family: monospace; font-weight: 600;">${escapeHtml(p.reference_id)}</td>
+          <td class="num" style="font-weight: 600;">${escapeHtml(p.amount)}</td>
+          <td>${escapeHtml(p.asset)}</td>
+          <td style="color: ${statusColor}; font-weight: 600;">${escapeHtml(p.status)}</td>
+          <td>${escapeHtml(p.created_at)}</td>
+          <td>${escapeHtml(p.settled_at ?? p.settlement_label ?? '')}</td>
+          <td>${escapeHtml(deliveryText(p))}</td>
+        </tr>`;
+      }
     )
     .join('');
 
@@ -67,8 +74,6 @@ export function renderProgrammeReportHtml(data: ReportData): string {
       ? LABEL_DELIVERY_NOT_APPLICABLE
       : `${(aggregates.delivery_rate * 100).toFixed(1)}%`;
 
-  const disclosureParas = DISCLOSURE_BLOCKS.map((b) => `<p>${escapeHtml(b)}</p>`).join('');
-
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -76,57 +81,48 @@ export function renderProgrammeReportHtml(data: ReportData): string {
 <title>${escapeHtml(programme.name)} — Impact Report</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #1a1a1a; margin: 40px; font-size: 12px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  h2 { font-size: 14px; margin: 24px 0 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-  .muted { color: #666; font-size: 11px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; font-size: 11px; }
-  th { background: #f5f5f5; }
+  body { font-family: 'Inter', -apple-system, sans-serif; color: #1a1714; background-color: #fcf5ec; margin: 40px; font-size: 12px; }
+  h1 { font-family: 'Fraunces', Georgia, serif; font-size: 24px; color: #1a1714; margin: 0 0 4px; }
+  h2 { font-family: 'Fraunces', Georgia, serif; font-size: 16px; color: #1a1714; margin: 28px 0 12px; border-bottom: 2px solid #5da76e; padding-bottom: 6px; }
+  .muted { color: #6b7280; font-size: 11px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 11px; }
+  th { background: #f5f2ee; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .cards { display: flex; gap: 16px; margin-top: 8px; }
-  .card { border: 1px solid #e5e5e5; border-radius: 6px; padding: 10px 14px; }
-  .card .k { color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
-  .card .v { font-size: 16px; font-weight: 600; }
-  .disclosure { background: #fbfbf7; border: 1px solid #e7e4d8; border-radius: 6px; padding: 12px 16px; margin-top: 12px; }
-  .disclosure h3 { margin: 0 0 8px; font-size: 13px; }
-  .disclosure p { margin: 0 0 8px; line-height: 1.45; }
+  .cards { display: flex; gap: 16px; margin-top: 12px; }
+  .card { flex: 1; border: 1px solid #e5e0d8; background: #ffffff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+  .card .k { color: #6b7280; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .card .v { font-size: 18px; font-weight: 700; color: #1a1714; margin-top: 6px; }
+  .card.accent .v { color: #5da76e; }
 </style>
 </head>
 <body>
   <h1>${escapeHtml(programme.name)}</h1>
   <div class="muted">Programme ID: ${escapeHtml(programme.id)} · Generated ${escapeHtml(generatedAt)} (${escapeHtml(aggregates.timezone)})</div>
 
-  <h2>Aggregate impact</h2>
+  <h2>Aggregate Impact</h2>
   <div class="cards">
-    <div class="card"><div class="k">Payments settled</div><div class="v">${aggregates.payment_count.settled}</div></div>
+    <div class="card"><div class="k">Payments Settled</div><div class="v">${aggregates.payment_count.settled}</div></div>
     <div class="card"><div class="k">Pending</div><div class="v">${aggregates.payment_count.pending}</div></div>
-    <div class="card"><div class="k">Delivery rate</div><div class="v">${deliveryRate}</div></div>
+    <div class="card accent"><div class="k">Delivery Rate</div><div class="v">${deliveryRate}</div></div>
   </div>
   <table>
-    <thead><tr><th>Asset</th><th class="num">Total disbursed</th></tr></thead>
+    <thead><tr><th>Asset</th><th class="num">Total Disbursed</th></tr></thead>
     <tbody>${totalsRows}</tbody>
   </table>
-  <div class="muted">Delivery basis — confirmed: ${aggregates.rate_basis.confirmed}, awaiting: ${aggregates.rate_basis.awaiting_confirmation}, no delivery record: ${aggregates.rate_basis.excluded_no_delivery_record}.</div>
+  <div class="muted" style="margin-top: 8px;">Delivery basis — confirmed: ${aggregates.rate_basis.confirmed}, awaiting: ${aggregates.rate_basis.awaiting_confirmation}, no delivery record: ${aggregates.rate_basis.excluded_no_delivery_record}.</div>
 
   <h2>Payments</h2>
   <table>
     <thead><tr><th>Reference</th><th class="num">Amount</th><th>Asset</th><th>Status</th><th>Created</th><th>Settled</th><th>Delivery</th></tr></thead>
     <tbody>${paymentRows}</tbody>
   </table>
-
-  <h2>How to read this page</h2>
-  <div class="disclosure">
-    <h3>${escapeHtml(DISCLOSURE_HEADING)}</h3>
-    ${disclosureParas}
-  </div>
 </body>
 </html>`;
 }
 
 /**
- * Plain-text line model for the pdf-lib fallback. Same content as the HTML, so the extracted
- * text satisfies the same assertions when Chromium is unavailable in a given environment.
+ * Plain-text line model for the pdf-lib fallback.
  */
 export function renderProgrammeReportLines(data: ReportData): string[] {
   const { programme, aggregates, payments, generatedAt } = data;
@@ -136,7 +132,7 @@ export function renderProgrammeReportLines(data: ReportData): string[] {
   lines.push(`Programme ID: ${programme.id}`);
   lines.push(`Generated ${generatedAt} (${aggregates.timezone})`);
   lines.push('');
-  lines.push('Aggregate impact');
+  lines.push('Aggregate Impact');
   for (const t of aggregates.totals_by_asset) {
     lines.push(`Total disbursed (${t.asset}): ${t.total}`);
   }
@@ -154,9 +150,6 @@ export function renderProgrammeReportLines(data: ReportData): string[] {
       `${p.reference_id} | ${p.amount} | ${p.asset} | ${p.status} | ${p.created_at} | ${p.settled_at ?? p.settlement_label ?? ''} | ${deliveryText(p)}`,
     );
   }
-  lines.push('');
-  lines.push(DISCLOSURE_HEADING);
-  for (const block of DISCLOSURE_BLOCKS) lines.push(block);
 
   return lines;
 }
