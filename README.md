@@ -238,10 +238,10 @@ This is the same standard applied to any audited cash transfer programme. It is 
 
 | Name | Role |
 |------|------|
-| Kernemi Kidane Akber | Frontend developer |
-| Felix Awere Odhiambo | Frontend developer |
 | Floyce Shitandi Omumani | Frontend developer |
-| Joshua Mumo | Frontend developer |
+| Kernemi Kidane Akber | Frontend developer |
+| Felix Awere Odhiambo | Backend developer |
+| Joshua Mumo | Backend developer |
 | Lukas Enock | Frontend developer |
 
 ---
