@@ -5,7 +5,6 @@ import Programmes from "./pages/ProgrammeView";
 import PdfExport from "./pages/PdfExport";
 import { About } from "./pages/About";
 import Contact from "./pages/Contact";
-import FrequentlyAskedQuestions from "./pages/frequentlyAskedQuestions";
 
 export default function App() {
   return (
@@ -15,10 +14,6 @@ export default function App() {
       <Route path="/export" element={<PdfExport />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />
-      <Route
-        path="/frequentlyAskedQuestions"
-        element={<FrequentlyAskedQuestions />}
-      />
     </Routes>
   );
 }
