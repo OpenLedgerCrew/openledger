@@ -127,9 +127,471 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
+    overflow-x: hidden;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-serif);
     letter-spacing: -0.02em;
   }
 }
+
+/* ─── Mobile Responsive Overrides ────────────────────────────────────────── */
+/* Targets all common phone widths: 360px–480px                               */
+
+@media (max-width: 480px) {
+
+  /* ── Prevent horizontal overflow globally ── */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  *, *::before, *::after {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+  }
+
+  /* ── Navigation / Header ── */
+  header {
+    padding: 0 !important;
+  }
+
+  header > div {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    height: 52px !important;
+    gap: 8px !important;
+  }
+
+  /* Hide wide nav spacer div */
+  header .w-82 {
+    display: none !important;
+  }
+
+  /* Show nav links in a compact scrollable row under header on mobile */
+  header nav {
+    display: flex !important;
+    overflow-x: auto;
+    gap: 0 !important;
+    scrollbar-width: none;
+  }
+
+  header nav a {
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+
+  /* ── Hero Section ── */
+  .pt-16 {
+    padding-top: 32px !important;
+  }
+
+  .pb-12 {
+    padding-bottom: 24px !important;
+  }
+
+  /* Hero h1 */
+  .text-5xl {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Hero subtitle */
+  .text-xl {
+    font-size: 1rem !important;
+  }
+
+  /* Hero description paragraph */
+  .max-w-2xl {
+    max-width: 100% !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Hero button row — stack vertically */
+  .mt-8.flex.justify-center.gap-4 {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 0 8px !important;
+  }
+
+  /* All buttons — minimum 44px touch target, full width on mobile */
+  .mt-8.flex.justify-center.gap-4 a,
+  .mt-8.flex.justify-center.gap-4 button {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* ── Stats Bar (4 stat cards) ── */
+  .grid.gap-4.md\:grid-cols-4 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Stat card padding and text */
+  .grid.gap-4.md\:grid-cols-4 > * {
+    padding: 12px !important;
+  }
+
+  /* ── Programme Cards Grid ── */
+  .grid.gap-6.md\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* Programme card inner padding */
+  .rounded-lg.border.border-green-200.bg-yellow-50.p-6 {
+    padding: 16px !important;
+  }
+
+  /* Programme card title */
+  .rounded-lg.border.border-green-200.bg-yellow-50.p-6 h3 {
+    font-size: 0.95rem !important;
+  }
+
+  /* Programme card description */
+  .rounded-lg.border.border-green-200.bg-yellow-50.p-6 p {
+    font-size: 0.8rem !important;
+  }
+
+  /* Amount figure in programme card */
+  .text-2xl.font-bold {
+    font-size: 1.25rem !important;
+  }
+
+  /* Current Programmes header row — stack on mobile */
+  .mb-8.flex.justify-between.items-center {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Section h2 headings */
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+
+  /* ── How It Works section ── */
+  .grid.gap-8.md\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .rounded-lg.bg-stone-100.p-8,
+  .rounded-lg.border.bg-white.p-8 {
+    padding: 20px !important;
+  }
+
+  /* ── Programmes Page (ProgrammeView) ── */
+
+  /* Page container padding */
+  div[style*="maxWidth: 1200"][style*="padding"] {
+    padding: 16px 12px 32px !important;
+  }
+
+  /* Programmes page h1 */
+  div[style*="fontSize: 36"] {
+    font-size: 26px !important;
+  }
+
+  /* Stats grid on programmes page — 2 columns */
+  div[style*="gridTemplateColumns"][style*="auto-fit"][style*="200px"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Programme cards grid — 1 column */
+  div[style*="gridTemplateColumns"][style*="auto-fit"][style*="280px"] {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* Programme card padding */
+  div[style*="borderRadius: 24"][style*="padding: 24"] {
+    padding: 16px !important;
+  }
+
+  /* Programme card h2 title */
+  div[style*="borderRadius: 24"] h2 {
+    font-size: 15px !important;
+  }
+
+  /* Programme card stat values */
+  div[style*="borderRadius: 24"] p[style*="fontSize: 18"] {
+    font-size: 15px !important;
+  }
+
+  /* Search and filter bar — stack vertically */
+  div[style*="justifyContent: space-between"][style*="flexWrap: wrap"][style*="marginBottom: 24"] {
+    flex-direction: column !important;
+  }
+
+  div[style*="justifyContent: space-between"][style*="flexWrap: wrap"][style*="marginBottom: 24"] > div,
+  div[style*="justifyContent: space-between"][style*="flexWrap: wrap"][style*="marginBottom: 24"] > select {
+    width: 100% !important;
+    min-width: unset !important;
+    flex: unset !important;
+  }
+
+  /* Export PDF button row */
+  div[style*="display: flex"][style*="gap: 12"][style*="marginBottom: 16"] {
+    flex-wrap: wrap !important;
+  }
+
+  div[style*="display: flex"][style*="gap: 12"][style*="marginBottom: 16"] button {
+    flex: 1 1 100% !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+  }
+
+  /* ── Programme Detail Modal ── */
+
+  /* Make modal full screen on mobile */
+  div[role="dialog"] > div[style*="position: relative"][style*="borderRadius: 24"],
+  div[role="dialog"] > div[style*="position: relative"][style*="borderRadius"] {
+    border-radius: 0 !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+    max-height: 100dvh !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    margin: 0 !important;
+  }
+
+  /* Dialog wrapper should fill viewport */
+  div[role="dialog"][style*="position: fixed"] {
+    padding: 0 !important;
+    align-items: flex-start !important;
+  }
+
+  /* Modal header padding on mobile */
+  div[role="dialog"] div[style*="padding: \"28px 32px\""],
+  div[role="dialog"] div[style*="padding: \"24px 28px"] {
+    padding: 16px !important;
+  }
+
+  /* Modal body padding on mobile */
+  div[role="dialog"] div[style*="padding: \"28px 32px 36px\""],
+  div[role="dialog"] div[style*="padding: \"22px 28px 28px\""] {
+    padding: 14px 16px 24px !important;
+  }
+
+  /* Modal programme title font size */
+  div[role="dialog"] h2[style*="fontSize: 22"],
+  div[role="dialog"] h2[style*="fontSize: 24"] {
+    font-size: 18px !important;
+  }
+
+  /* Modal stat grid — 2 columns on mobile */
+  div[role="dialog"] div[style*="gridTemplateColumns: \"1fr 1fr 1fr\""] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Stat value font size in modal */
+  div[role="dialog"] p[style*="fontSize: 22"],
+  div[role="dialog"] p[style*="fontSize: 24"] {
+    font-size: 18px !important;
+  }
+
+  /* Payment table inside modal — scrollable */
+  div[role="dialog"] table,
+  div[role="dialog"] div[style*="overflowX"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    font-size: 12px !important;
+  }
+
+  div[role="dialog"] th,
+  div[role="dialog"] td {
+    padding: 8px 6px !important;
+    font-size: 11px !important;
+    white-space: nowrap;
+  }
+
+  /* Reference ID — allow break on mobile */
+  div[role="dialog"] td[style*="fontFamily: \"monospace\""],
+  div[role="dialog"] span[style*="fontFamily: \"monospace\""] {
+    font-size: 10px !important;
+    word-break: break-all !important;
+    white-space: normal !important;
+    max-width: 90px !important;
+  }
+
+  /* ── Payment Details Modal ── */
+
+  div[role="dialog"] div[style*="maxWidth: 540"] {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    border-radius: 0 !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Payment modal header */
+  div[role="dialog"] div[style*="padding: \"24px 28px 18px\""] {
+    padding: 14px 16px 12px !important;
+  }
+
+  /* Payment modal body */
+  div[role="dialog"] div[style*="padding: \"22px 28px 28px\""] {
+    padding: 14px 16px 20px !important;
+  }
+
+  /* Payment reference h2 */
+  div[role="dialog"] h2[style*="fontSize: 20"] {
+    font-size: 14px !important;
+  }
+
+  /* Payment amount hero */
+  div[role="dialog"] p[style*="fontSize: 28"] {
+    font-size: 22px !important;
+  }
+
+  /* Info grid inside payment modal */
+  div[role="dialog"] div[style*="gridTemplateColumns: \"1fr 1fr\""] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* ── Buttons — global touch-target floor ── */
+  button, a[role="button"], [class*="Button"] {
+    min-height: 44px !important;
+  }
+
+  /* ── About Page ── */
+  section[style*="padding: \"64px 24px\""],
+  div[style*="padding: \"64px 24px\""] {
+    padding: 28px 14px !important;
+  }
+
+  h1[style*="fontSize: 48"],
+  h1[style*="fontSize: 52"] {
+    font-size: 28px !important;
+    line-height: 1.2 !important;
+  }
+
+  h2[style*="fontSize: 36"],
+  h2[style*="fontSize: 32"] {
+    font-size: 22px !important;
+  }
+
+  /* About page stat grid */
+  div[style*="gridTemplateColumns: \"repeat(4"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* About / Contact card grids — full width on mobile */
+  div[style*="gridTemplateColumns: \"repeat(3"],
+  div[style*="gridTemplateColumns: \"1fr 1fr 1fr\""] {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  /* ── Contact Page ── */
+  div[style*="gridTemplateColumns: \"1fr 2fr\""],
+  div[style*="gridTemplateColumns: \"2fr 1fr\""] {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+
+  /* Contact form inputs */
+  input[style], textarea[style] {
+    width: 100% !important;
+    font-size: 16px !important; /* Prevents iOS auto-zoom */
+  }
+
+  /* ── Footer ── */
+  footer > div.grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 28px 16px !important;
+  }
+
+  footer .flex.items-center.justify-between {
+    flex-direction: column !important;
+    gap: 6px !important;
+    text-align: center !important;
+    padding: 14px 16px !important;
+  }
+
+  footer ul {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px 16px !important;
+  }
+
+  footer li {
+    white-space: nowrap;
+  }
+
+  /* ── Tailwind utility overrides for mobile ── */
+
+  /* mt-24 footer spacing reduction */
+  .mt-24 {
+    margin-top: 48px !important;
+  }
+
+  /* Section padding reduction */
+  .py-16 {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+
+  .pb-10 {
+    padding-bottom: 20px !important;
+  }
+
+  .pb-12 {
+    padding-bottom: 24px !important;
+  }
+
+  /* Container horizontal padding */
+  .px-4, .sm\:px-6 {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Card padding on mobile */
+  .p-6 {
+    padding: 14px !important;
+  }
+
+  .p-8 {
+    padding: 18px !important;
+  }
+
+  /* Font size reductions */
+  .text-sm {
+    font-size: 0.8125rem !important;
+  }
+
+  .text-xs {
+    font-size: 0.7rem !important;
+  }
+
+  /* ── Prevent any element from overflowing screen width ── */
+  img, svg, video, table {
+    max-width: 100% !important;
+  }
+
+  /* Payment table wrapper — horizontal scroll */
+  table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap !important;
+  }
+
+  th, td {
+    padding: 8px 10px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
