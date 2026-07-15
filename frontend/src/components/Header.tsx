@@ -32,8 +32,8 @@ export function Header({ showSearch = false }: HeaderProps) {
                   // pill-like link with smooth color transition on hover and active
                   "rounded-full px-4 py-2 text-sm transition-colors duration-200",
                   isActive
-                    ? "font-medium text-foreground bg-white/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/10",
+                    ? "font-medium text-foreground bg-green-200"
+                    : "text-muted-foreground hover:text-foreground hover:bg-green-100 hover:text-green-800",
                 )
               }
             >
