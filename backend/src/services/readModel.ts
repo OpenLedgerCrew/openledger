@@ -88,7 +88,10 @@ export function buildPaymentDetail(view: PublicPaymentView, disclosure: string) 
     // "cash confirmed delivered (field process)" — the separate, three-state delivery leg.
     delivery_leg: {
       label: LABEL_DELIVERY_LEG,
-      delivery: view.delivery,
+      state: view.delivery.state,
+      confirmed_at: view.delivery.confirmed_at,
+      anchoring_tx_hash: view.delivery.anchoring_tx_hash,
+      explorer_url: view.delivery.explorer_url,
     },
     disclosure,
   };

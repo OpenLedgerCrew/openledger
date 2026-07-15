@@ -44,27 +44,15 @@ export function ProgrammeDetailModal({
         fetch(`/api/programmes/${programmeId}/aggregates`),
         fetch(`/api/programmes/${programmeId}/payments?page=${pageNum}&limit=${PAGE_SIZE}`),
       ]);
-      if (aggRes.ok) {
-        const agg = await aggRes.json();
-        setAggregates(agg);
+      if (!aggRes.ok || !payRes.ok) {
+        throw new Error("Failed to load programme data");
       }
-      if (payRes.ok) {
-        const pay = await payRes.json();
-        setPayments(pay.payments || pay);
-        setTotalPages(pay.total_pages || 1);
-      }
+      const [agg, pay] = await Promise.all([aggRes.json(), payRes.json()]);
+      setAggregates(agg);
+      setPayments(pay.payments || pay);
+      setTotalPages(pay.total_pages || 1);
     } catch {
-      // Use mock data for demo purposes when API is unavailable
-      setAggregates({
-        totals_by_asset: [{ asset: "USDC", total: "5,200,000" }],
-        payment_count: { total: 847, settled: 812, pending: 24, failed: 11 },
-        delivery_rate: 96,
-        rate_basis: { confirmed: 812, awaiting_confirmation: 24, excluded_no_delivery_record: 11 },
-        timezone: "UTC",
-        generated_at: new Date().toISOString(),
-      });
-      setPayments(MOCK_PAYMENTS);
-      setTotalPages(3);
+      setError("Failed to load programme data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -263,7 +251,7 @@ export function ProgrammeDetailModal({
                   {aggregates.delivery_rate !== null && (
                     <StatTile
                       label="Delivery Rate"
-                      value={`${aggregates.delivery_rate}%`}
+                      value={`${(aggregates.delivery_rate * 100).toFixed(1)}%`}
                       accent
                     />
                   )}
@@ -477,97 +465,3 @@ function PagBtn({ label, disabled, onClick }: { label: string; disabled: boolean
     </button>
   );
 }
-
-/* ── Mock data for demo ─────────────────────────── */
-const MOCK_PAYMENTS: PaymentRow[] = [
-  {
-    reference_id: "PAY-001-TLP",
-    amount: "6,150",
-    asset: "USDC",
-    status: "SUCCESS",
-    created_at: "2025-08-12T09:24:00Z",
-    settled_at: "2025-08-12T09:31:00Z",
-    tx_hash: "a8f3c2d1e4b7f9a0b2c3d4e5f6a7b8c9",
-    explorer_url: null,
-    settlement_label: "Settled",
-    delivery: {
-      state: "confirmed",
-      label: "Confirmed",
-      confirmed_at: "2025-08-13T11:00:00Z",
-      anchoring_tx_hash: "d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4",
-      explorer_url: null,
-    },
-  },
-  {
-    reference_id: "PAY-002-TLP",
-    amount: "6,150",
-    asset: "USDC",
-    status: "SUCCESS",
-    created_at: "2025-08-12T09:25:00Z",
-    settled_at: "2025-08-12T09:32:00Z",
-    tx_hash: "b9c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8",
-    explorer_url: null,
-    settlement_label: "Settled",
-    delivery: {
-      state: "awaiting_confirmation",
-      label: "Awaiting confirmation",
-      confirmed_at: null,
-      anchoring_tx_hash: null,
-      explorer_url: null,
-    },
-  },
-  {
-    reference_id: "PAY-003-TLP",
-    amount: "6,150",
-    asset: "USDC",
-    status: "PENDING",
-    created_at: "2025-08-13T14:10:00Z",
-    settled_at: null,
-    tx_hash: null,
-    explorer_url: null,
-    settlement_label: null,
-    delivery: {
-      state: "not_applicable",
-      label: "Not applicable",
-      confirmed_at: null,
-      anchoring_tx_hash: null,
-      explorer_url: null,
-    },
-  },
-  {
-    reference_id: "PAY-004-TLP",
-    amount: "6,150",
-    asset: "USDC",
-    status: "FAILED",
-    created_at: "2025-08-13T14:15:00Z",
-    settled_at: null,
-    tx_hash: null,
-    explorer_url: null,
-    settlement_label: null,
-    delivery: {
-      state: "not_applicable",
-      label: "Not applicable",
-      confirmed_at: null,
-      anchoring_tx_hash: null,
-      explorer_url: null,
-    },
-  },
-  {
-    reference_id: "PAY-005-TLP",
-    amount: "6,150",
-    asset: "USDC",
-    status: "SUCCESS",
-    created_at: "2025-08-14T08:00:00Z",
-    settled_at: "2025-08-14T08:07:00Z",
-    tx_hash: "c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
-    explorer_url: null,
-    settlement_label: "Settled",
-    delivery: {
-      state: "confirmed",
-      label: "Confirmed",
-      confirmed_at: "2025-08-15T10:00:00Z",
-      anchoring_tx_hash: "f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2",
-      explorer_url: null,
-    },
-  },
-];
