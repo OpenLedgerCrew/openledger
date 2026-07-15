@@ -1,3 +1,7 @@
+import express from 'express';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { buildApp } from './index';
 import { createSdpForkClient, type SdpForkClient } from './services/sdpForkClient';
 import { createSeedForkClient } from './services/seedForkClient';
@@ -29,6 +33,21 @@ const app = buildApp(
   },
   { logger: true },
 );
+
+// Production single-origin serving: once the frontend is built (`npm run build` in frontend/),
+// serve it from this same process so the portal and the API share one origin. Registered after
+// buildApp's API routers, so /api and no-prefix API paths still win over the SPA fallback.
+const frontendDist = join(dirname(fileURLToPath(import.meta.url)), '../../frontend/dist');
+if (existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get(/(.*)/, (req, res, next) => {
+    // /programmes/:id and /programmes/:id/... are real API routes (no frontend route matches
+    // them, since the client only ever mounts the bare /programmes list page) — let them through.
+    if (req.path.startsWith('/api') || /^\/programmes\/.+/.test(req.path)) return next();
+    res.sendFile(join(frontendDist, 'index.html'));
+  });
+  console.log(`Serving built frontend from ${frontendDist}`);
+}
 
 const server = app.listen(PORT, HOST, () => {
   const source = SDP_FORK_BASE_URL ? `SDP fork at ${SDP_FORK_BASE_URL}` : 'in-memory seed data';

@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
+import { apiRoutes } from './routes/api';
 import { exportRoutes } from './routes/export';
 import { paymentRoutes } from './routes/payments';
 import { programmeRoutes } from './routes/programmes';
@@ -40,9 +41,13 @@ export function buildApp(deps: AppDeps, options: BuildAppOptions = {}): AppInsta
   // cross-origin during development (Vite on :5173). Reads only; no credentials.
   app.use(cors({ origin: true, methods: ['GET'] }));
 
-  app.use(programmeRoutes(app));
-  app.use(paymentRoutes(app));
-  app.use(exportRoutes(app));
+  // Mounted under both `/` and `/api` — the frontend calls `/api/...`, existing tests/tools use
+  // the no-prefix paths, and both must resolve to the same read model (see docs/FRONTEND_BACKEND_SYNC.md).
+  const routers = [programmeRoutes(app), paymentRoutes(app), exportRoutes(app), apiRoutes(app)];
+  for (const router of routers) {
+    app.use(router);
+    app.use('/api', router);
+  }
 
   return app;
 }

@@ -67,12 +67,11 @@ export default function PdfExportPage() {
           prev.map((j) => (j.programmeId === prog.id ? { ...j, status: "success" } : j))
         );
       })
-      .catch(() => {
-        // For demo: simulate success
+      .catch((err: Error) => {
         setJobs((prev) =>
           prev.map((j) =>
             j.programmeId === prog.id
-              ? { ...j, status: "success" }
+              ? { ...j, status: "error", error: err.message }
               : j
           )
         );
