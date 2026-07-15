@@ -17,7 +17,8 @@ interface HeaderProps {
 
 export function Header({ showSearch = false }: HeaderProps) {
   return (
-<header className="sticky top-0 z-40 border-b border-border/60 bg-[#f3e7c4] backdrop-blur">      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-[#f3e7c4] backdrop-blur rounded-b-2xl shadow-sm">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <Logo />
         <div className="h-6 w-82 "></div>
         <nav className="hidden items-center gap-1 md:flex">
@@ -28,10 +29,11 @@ export function Header({ showSearch = false }: HeaderProps) {
               end={item.to === "/"}
               className={({ isActive }) =>
                 cn(
-                  "rounded-md px-10 py-1.5 text-sm transition-colors",
+                  // pill-like link with smooth color transition on hover and active
+                  "rounded-full px-4 py-2 text-sm transition-colors duration-200",
                   isActive
-                    ? "font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "font-medium text-foreground bg-white/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/10",
                 )
               }
             >
