@@ -43,6 +43,19 @@ export function Header({ showSearch = false }: HeaderProps) {
         </nav>
 
         <div className="ml-auto flex items-center gap-3">
+          <NavLink
+            to="/frequentlyAskedQuestions"
+            className={({ isActive }: { isActive?: boolean }) =>
+              cn(
+                "rounded-full px-4 py-2 text-sm transition-colors duration-200",
+                isActive
+                  ? "font-medium text-foreground bg-green-200"
+                  : "text-muted-foreground hover:text-foreground hover:bg-green-100 hover:text-green-800",
+              )
+            }
+          >
+            FAQ
+          </NavLink>
           {showSearch && (
             <div className="relative hidden sm:block">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
