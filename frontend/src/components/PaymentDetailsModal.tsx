@@ -290,17 +290,16 @@ export function PaymentDetailsModal({
               </div>
             )}
           </div>
+        </div>
 
-
+        <style>{`
+          @keyframes pdFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes pdSlideUp {
+            from { opacity: 0; transform: translateY(28px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+          }
+        `}</style>
       </div>
-
-      <style>{`
-        @keyframes pdFadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pdSlideUp {
-          from { opacity: 0; transform: translateY(28px) scale(0.96); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>
   );
 }
