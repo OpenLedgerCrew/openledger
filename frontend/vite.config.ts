@@ -11,15 +11,7 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-<<<<<<< HEAD
-      "/api": {
-        target: "http://localhost:3001",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
-      },
-=======
       "/api": { target: "http://localhost:3001", changeOrigin: true },
->>>>>>> 04b34aa (front end intergration)
     },
   },
   test: {
