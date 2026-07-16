@@ -1,0 +1,39 @@
+/* ── Reset & base ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --color-bg:         #0a0e1a;
+  --color-surface:    #111827;
+  --color-border:     #1f2937;
+  --color-primary:    #7c3aed;
+  --color-primary-h:  #6d28d9;
+  --color-accent:     #a78bfa;
+  --color-text:       #f3f4f6;
+  --color-muted:      #9ca3af;
+  --color-success:    #34d399;
+  --color-error:      #f87171;
+  --color-warning:    #fbbf24;
+  --radius:           12px;
+  --radius-sm:        8px;
+  --shadow:           0 4px 24px rgba(0,0,0,.45);
+  --font:             'Inter', system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+
+a { color: var(--color-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 2px; }
+
+img, svg { display: block; max-width: 100%; }
+
+h1, h2, h3 { line-height: 1.2; }
