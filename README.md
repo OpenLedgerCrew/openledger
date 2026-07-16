@@ -39,7 +39,7 @@ OpenLedger reads from a fork of DisburseFlow's data model and displays that data
 | Routing | React Router DOM 7 |
 | UI components | Radix UI primitives, shadcn/ui |
 | Styling | Tailwind CSS 4, custom CSS |
-| HTTP client | Axios (via Vite dev proxy to backend) |
+| HTTP client | Native `fetch` (via Vite dev proxy to backend) |
 | PDF generation | WKHTMLTOPDF (server-side, via Express backend) |
 | Blockchain verification | Stellar network — deep links to stellar.expert, no runtime API calls |
 | Testing | Vitest, Testing Library, MSW |
@@ -150,19 +150,94 @@ The compiled output will be placed in `frontend/dist/`.
 
 ---
 
-## Environment Variables
+## Running Against a Real DisburseFlow (G3) Fork Locally
 
-Create a `.env.local` file in the `frontend/` directory with the following variables:
+By default the backend serves in-memory seed data (see `backend/README.md`), which is enough to
+develop the UI without any other services running. To develop against the **real** DisburseFlow
+fork (G3) instead — real disbursements, real payments, real Stellar transaction hashes — follow
+this chain. It assumes `G3` and `openledger` are cloned as sibling directories (the seed script's
+default path resolution below depends on that layout; override it if yours differs).
 
-```env
-# Base URL for the DisburseFlow fork API
-VITE_API_BASE_URL=http://localhost:3001
+### 1. Bring up the G3 (DisburseFlow) fork
 
-# Base URL for the Stellar explorer (use testnet during development)
-VITE_EXPLORER_BASE_URL=https://stellar.expert/explorer/testnet
+```bash
+git clone --recursive https://github.com/DisburseFlow/G3.git
+cd G3/backend
+make setup   # interactive wizard — choose testnet; let it launch the Docker stack
 ```
 
-During development, the Vite proxy (configured in `vite.config.ts`) forwards all `/api/*` requests to the backend automatically, so `VITE_API_BASE_URL` is only used in production builds.
+Full walkthrough (Docker prerequisites, local DNS, HTTPS, troubleshooting): `G3/backend/dev/README.md`.
+This brings up the SDP API on `http://localhost:8000` with an **empty** database — no
+disbursements exist yet.
+
+### 2. Seed demo data + wire up OpenLedger's `.env`
+
+```bash
+G3/backend/dev/scripts/seed-demo-disbursement.sh
+```
+
+This creates one demo disbursement (3 receivers, started so payments begin processing), mints a
+read-only API key scoped to `read:disbursements` + `read:payments`, and writes
+`SDP_FORK_BASE_URL` + `SDP_API_KEY` straight into `openledger/backend/.env` (created from
+`.env.example` if it doesn't exist yet). Safe to re-run — each run adds another disbursement
+rather than overwriting the last.
+
+If your `openledger` checkout isn't a sibling of `G3`, point the script at it explicitly:
+```bash
+OPENLEDGER_BACKEND_DIR=/path/to/openledger/backend G3/backend/dev/scripts/seed-demo-disbursement.sh
+```
+
+### 3. Add the shared OpenRouter key (manual — it's a team secret)
+
+The seed script can't mint this one. Add it to `openledger/backend/.env` yourself:
+
+```env
+OPENROUTER_API_KEY=<ask a teammate, or use your own free key from openrouter.ai>
+```
+
+Without it, the AI transparency summary and chat assistant still work — they just answer from a
+deterministic, non-AI fallback instead of calling OpenRouter.
+
+### 4. Run OpenLedger as usual
+
+```bash
+cd openledger/backend && npm run dev   # picks up the .env written in step 2
+cd openledger/frontend && npm run dev  # http://localhost:5173
+```
+
+The backend's startup log confirms which data source it's using — look for
+`data source: SDP fork at http://localhost:8000` rather than `in-memory seed data`.
+
+### Letting someone else hit your instance remotely
+
+If a teammate needs to point their *own* local frontend at *your* running backend (rather than
+running their own G3 fork), tunnel your backend (e.g. `ngrok http 3001`) and have them run their
+frontend with the proxy target overridden:
+
+```bash
+VITE_BACKEND_URL=https://<your-tunnel-domain> npm run dev
+```
+
+See `frontend/vite.config.ts` — the dev proxy target defaults to `http://localhost:3001` but
+reads `VITE_BACKEND_URL` if set, and always sends `ngrok-skip-browser-warning` so tunneled
+requests aren't intercepted by ngrok's free-tier interstitial page.
+
+---
+
+## Environment Variables
+
+The frontend has **no `.env` file** in normal local development — every API call is a relative
+`fetch('/api/...')`, resolved by the Vite dev proxy in `frontend/vite.config.ts`. The only
+frontend-side override is an env var passed on the command line, not a `.env` file (Vite config
+files run in Node before `.env` loading applies to client code):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_BACKEND_URL` | `http://localhost:3001` | Where the `/api/*` dev proxy forwards to. Override to point your local frontend at a remote/tunneled backend (see above). |
+
+The **backend**'s configuration is a real `.env` file (`openledger/backend/.env`, copy from
+`.env.example`) — see `backend/README.md` for the full list (`SDP_FORK_BASE_URL`, `SDP_API_KEY`,
+`OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `EXPLORER_BASE_URL`, `PORT`, `HOST`).
 
 ---
 

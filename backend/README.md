@@ -43,16 +43,20 @@ OpenLedger backend listening on 0.0.0.0:3001 (data source: in-memory seed data)
 | --- | --- | --- |
 | `PORT` | `3001` | Port to listen on |
 | `HOST` | `0.0.0.0` | Host to bind |
-| `SDP_FORK_BASE_URL` | *(unset)* | Base URL of a live SDP fork read API. When unset, the server serves **baked-in seed data** instead (see below) |
+| `SDP_FORK_BASE_URL` | *(unset)* | Base URL of a live SDP fork (DisburseFlow/G3) read API. When unset, the server serves **baked-in seed data** instead (see below) |
+| `SDP_API_KEY` | *(unset)* | Read-only API key for the fork above (`Authorization: Bearer SDP_...`), scoped to `read:disbursements` + `read:payments`. Required whenever `SDP_FORK_BASE_URL` is set — see the root README's "Running Against a Real DisburseFlow (G3) Fork Locally" for how to mint one |
 | `EXPLORER_BASE_URL` | `https://stellar.expert/explorer/testnet` | Base URL used to build explorer deep links (`{base}/tx/{hash}`) |
+| `OPENROUTER_API_KEY` | *(unset)* | Enables the AI transparency summary and chat assistant via OpenRouter. Without it, both features still work — they answer from a deterministic, non-AI fallback |
+| `OPENROUTER_MODEL` | `google/gemma-4-26b-a4b-it:free` | Override the free OpenRouter model used for the above |
 
-**Data source:** the real SDP fork read API and the LastMile confirmation contract don't exist
-yet (see `docs/OPEN_ITEMS.md`, OQ-1/OQ-2). Until `SDP_FORK_BASE_URL` points at a real fork, the
-server serves an in-memory seed dataset (`src/services/seedForkClient.ts`) that mirrors the test
-fixtures — 30 payments across mixed statuses/assets/delivery states — so the API returns
-realistic data out of the box. When `SDP_FORK_BASE_URL` is set, the server switches to the real
-HTTP client (`src/services/sdpForkClient.ts`), which degrades to empty results if the fork is
-unreachable rather than crashing.
+**Data source:** until `SDP_FORK_BASE_URL` (+ `SDP_API_KEY`) points at a real, running DisburseFlow
+fork, the server serves an in-memory seed dataset (`src/services/seedForkClient.ts`) that mirrors
+the test fixtures — 30 payments across mixed statuses/assets/delivery states — so the API returns
+realistic data out of the box. When both are set, the server switches to the real HTTP client
+(`src/services/sdpForkClient.ts`), which authenticates with the API key and degrades to empty
+results if the fork is unreachable rather than crashing. The LastMile delivery-confirmation
+contract genuinely doesn't exist yet (`docs/OPEN_ITEMS.md`, OQ-2) — delivery data is always empty
+until that integration lands, independent of the SDP fork connection.
 
 ## Test
 
