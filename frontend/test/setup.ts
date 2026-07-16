@@ -2,6 +2,15 @@ import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 import React from 'react';
 
+// jsdom has no ResizeObserver; recharts' <ResponsiveContainer> (used by ImpactCharts) needs one.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(globalThis as unknown as { ResizeObserver: typeof ResizeObserverStub }).ResizeObserver =
+  ResizeObserverStub;
+
 // Mock react-router-dom globally for tests so that links/navlinks render as standard <a> tags
 // and avoid throwing "Cannot destructure property 'basename' of 'React.useContext(...)' as it is null"
 vi.mock('react-router-dom', async (importOriginal) => {

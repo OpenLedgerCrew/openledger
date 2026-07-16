@@ -6,8 +6,8 @@ import type { RawPaymentRecord } from '../types/payment';
 
 /**
  * Optional "special features" layer on top of the read-only core: an AI-generated plain-
- * language transparency summary per programme, and a simple FAQ chat assistant. Both call the
- * Anthropic API when ANTHROPIC_API_KEY is set, and fall back to a deterministic, offline answer
+ * language transparency summary per programme, and a simple FAQ chat assistant. Both call
+ * OpenRouter when OPENROUTER_API_KEY is set, and fall back to a deterministic, offline answer
  * otherwise (see aiClient.ts) — the endpoints never fail the request for a missing key.
  */
 export function aiRoutes(app: AppInstance): Router {

@@ -3,6 +3,8 @@
 export interface Programme {
   id: string;
   name: string;
+  /** The fork's disbursement status (DRAFT/READY/STARTED/PAUSED/COMPLETED), passed through as-is. */
+  status: string;
 }
 
 export interface AssetTotal {

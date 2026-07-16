@@ -1,43 +1,81 @@
 import type { DeliveryConfirmation } from '../types/delivery';
 import type { Payment, RawPaymentRecord } from '../types/payment';
 import type { Programme } from '../types/programme';
-import { parseDeliveryRecord } from './lastMileClient';
 import { filterPayment } from './piiFilter';
 
 // Section 3.1 — SDP fork integration. OpenLedger reads via the fork's API, never its database
 // (3.1.2, D-2), and is "a pure consumer" of the fork's data: it does not write registrations
-// or confirmations, so this surface is read-only. Server-to-fork authentication is an open
-// implementation detail (3.1.3) — see OI-2 in docs/OPEN_ITEMS.md.
+// or confirmations, so this surface is read-only. Server-to-fork authentication (3.1.3, OI-2)
+// is resolved: the deployed fork issues scoped API keys (read:disbursements + read:payments)
+// via its own /api-keys endpoint, sent here as a bearer token.
 
 export interface SdpForkClientConfig {
   baseUrl: string;
+  apiKey: string;
 }
 
 export interface SdpForkClient {
   getProgramme(programmeId: string): Promise<Programme>;
+  getProgrammes(): Promise<Programme[]>;
   getPayments(programmeId: string): Promise<Payment[]>;
   // Named without any write-verb ("confirm"/"create"/…) so the read-only surface is provable
   // by the section 3.1.2 "pure consumer" test. Returns confirmation records read from the fork.
   getDeliveries(programmeId: string): Promise<DeliveryConfirmation[]>;
 }
 
+interface SdpPaginatedResponse<T> {
+  pagination: { pages: number; total: number };
+  data: T[];
+}
+
+const PAGE_LIMIT = 100;
+
+/** One entry of a payment's status_history, as returned by the fork. */
+interface SdpStatusHistoryEntry {
+  status: string;
+  timestamp: string;
+}
+
+/** Disbursement record shape as returned by the fork's GET /disbursements (subset used here). */
+interface SdpDisbursementRecord {
+  id: string;
+  name: string;
+  status: string;
+}
+
+/** Payment record shape as returned by the fork's GET /payments (subset actually used here). */
+interface SdpPaymentRecord {
+  id: string;
+  external_payment_id?: string;
+  amount: string;
+  asset?: { code?: string };
+  status: string;
+  status_history?: SdpStatusHistoryEntry[];
+  created_at: string;
+  stellar_transaction_id?: string;
+  disbursement?: { id?: string };
+}
+
 /**
  * Read-only HTTP consumer of the SDP fork's API (D-2: "Read via the fork's API, not its
- * database"). The exact endpoints, field names, and auth are still open (OQ-1, OI-2), so the
- * paths below are provisional and NO authentication is attached — that is deferred to the gap
- * analysis rather than guessed (docs/OPEN_ITEMS.md, section 3.1.3).
+ * database"). Endpoints and field names below match the deployed fork (verified directly
+ * against its Go source, not guessed): GET /disbursements/:id, GET /disbursements (paginated),
+ * GET /payments (paginated via page/page_limit, filterable by type/status/receiver_id/created_at
+ * range — but not by disbursement id, see getPayments below).
  *
- * Because the fork's read contract does not yet exist, every call degrades gracefully: an
- * unreachable fork or a non-OK / malformed response yields an empty result instead of throwing,
- * so the portal stays up and simply shows no data (I-2: "must degrade gracefully if absent").
- * PII is stripped at this adapter boundary (D-3) via filterPayment / parseDeliveryRecord.
+ * Every call still degrades gracefully: an unreachable fork or a non-OK / malformed response
+ * yields an empty result instead of throwing, so the portal stays up and simply shows no data
+ * (I-2: "must degrade gracefully if absent"). PII is stripped at this adapter boundary (D-3)
+ * via filterPayment.
  */
 export function createSdpForkClient(config: SdpForkClientConfig): SdpForkClient {
   const base = config.baseUrl.replace(/\/+$/, '');
 
   async function fetchJson(path: string): Promise<unknown> {
     try {
-      const res = await fetch(`${base}${path}`);
+      const res = await fetch(`${base}${path}`, {
+        headers: { Authorization: `Bearer ${config.apiKey}` },
+      });
       if (!res.ok) return null;
       return await res.json();
     } catch {
@@ -47,28 +85,69 @@ export function createSdpForkClient(config: SdpForkClientConfig): SdpForkClient 
 
   return {
     async getProgramme(programmeId: string): Promise<Programme> {
-      const data = await fetchJson(`/programmes/${encodeURIComponent(programmeId)}`);
+      const data = await fetchJson(`/disbursements/${encodeURIComponent(programmeId)}`);
       if (data && typeof data === 'object' && 'id' in data && 'name' in data) {
-        const { id, name } = data as Record<string, unknown>;
-        return { id: String(id), name: String(name) };
+        const { id, name, status } = data as Record<string, unknown>;
+        return { id: String(id), name: String(name), status: String(status ?? '') };
       }
       // Graceful default so a missing fork does not crash the read path.
-      return { id: programmeId, name: programmeId };
+      return { id: programmeId, name: programmeId, status: '' };
+    },
+
+    async getProgrammes(): Promise<Programme[]> {
+      const rows: SdpDisbursementRecord[] = [];
+      let page = 1;
+      for (;;) {
+        const data = await fetchJson(`/disbursements?page_limit=${PAGE_LIMIT}&page=${page}`);
+        const parsed = data as SdpPaginatedResponse<SdpDisbursementRecord> | null;
+        if (!parsed || !Array.isArray(parsed.data)) break;
+        rows.push(...parsed.data);
+        if (page >= parsed.pagination.pages) break;
+        page += 1;
+      }
+      return rows.map((row) => ({ id: row.id, name: row.name, status: row.status }));
     },
 
     async getPayments(programmeId: string): Promise<Payment[]> {
-      const data = await fetchJson(`/programmes/${encodeURIComponent(programmeId)}/payments`);
-      if (!Array.isArray(data)) return [];
-      // Strip PII at the adapter (D-3) before the record travels any further.
-      return data.map((row) => filterPayment(row as RawPaymentRecord) as unknown as Payment);
+      // The fork has no disbursement_id filter on /payments (verified against its query
+      // validator), so every DISBURSEMENT-type payment page is fetched and scoped to this
+      // programme in-memory here. Contained to this adapter; does not scale to very large
+      // disbursements, but the fork's Go backend is out of bounds to change.
+      const rows: SdpPaymentRecord[] = [];
+      let page = 1;
+      for (;;) {
+        const data = await fetchJson(
+          `/payments?type=DISBURSEMENT&page_limit=${PAGE_LIMIT}&page=${page}`,
+        );
+        const parsed = data as SdpPaginatedResponse<SdpPaymentRecord> | null;
+        if (!parsed || !Array.isArray(parsed.data)) break;
+        rows.push(...parsed.data);
+        if (page >= parsed.pagination.pages) break;
+        page += 1;
+      }
+
+      return rows
+        .filter((row) => row.disbursement?.id === programmeId)
+        .map((row) => {
+          const successEntry = row.status_history?.find((h) => h.status === 'SUCCESS');
+          const raw: RawPaymentRecord = {
+            reference_id: row.external_payment_id || row.id,
+            amount: row.amount,
+            asset: row.asset?.code,
+            status: row.status,
+            created_at: row.created_at,
+            settled_at: successEntry?.timestamp ?? null,
+            tx_hash: row.stellar_transaction_id || null,
+          };
+          // Strip PII at the adapter (D-3) before the record travels any further.
+          return filterPayment(raw) as unknown as Payment;
+        });
     },
 
-    async getDeliveries(programmeId: string): Promise<DeliveryConfirmation[]> {
-      const data = await fetchJson(
-        `/programmes/${encodeURIComponent(programmeId)}/delivery-confirmations`,
-      );
-      if (!Array.isArray(data)) return [];
-      return data.map((row) => parseDeliveryRecord(row as Record<string, unknown>));
+    async getDeliveries(_programmeId: string): Promise<DeliveryConfirmation[]> {
+      // Delivery confirmations are LastMile's contract (OQ-2), not the SDP fork's — the
+      // deployed fork has no delivery-confirmation endpoint. No network call to make here.
+      return [];
     },
   };
 }

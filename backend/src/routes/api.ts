@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import type { AppInstance } from '../index';
+import { aggregateProgramme } from '../services/aggregation';
 import { renderProgrammePdf } from '../services/pdf';
 import { buildProgrammeReadModel, type ProgrammeReadModel } from '../services/readModel';
 import type { RawPaymentRecord } from '../types/payment';
 
 const DEFAULT_PAGE_SIZE = 25;
+const GLOBAL_AGGREGATES_CACHE_KEY = 'aggregates:global';
 
 /**
  * Endpoints the React frontend calls (split, `/api`-prefixed): a bare aggregates object, a
@@ -34,6 +36,31 @@ export function apiRoutes(app: AppInstance): Router {
       return model;
     });
   }
+
+  // Global ProgrammeAggregates summed across every programme (homepage stats bar). Reuses
+  // aggregateProgramme unchanged — just fed the union of every programme's payments/deliveries
+  // instead of one programme's, so this never drifts from the per-programme math.
+  router.get('/aggregates', async (req, res) => {
+    const cached = app.cache.get(GLOBAL_AGGREGATES_CACHE_KEY);
+    if (cached) {
+      res.json(cached);
+      return;
+    }
+
+    const { forkClient } = app.deps;
+    const programmes = await forkClient.getProgrammes();
+    const perProgramme = await Promise.all(
+      programmes.map((p) =>
+        Promise.all([forkClient.getPayments(p.id), forkClient.getDeliveries(p.id)]),
+      ),
+    );
+    const allPayments = perProgramme.flatMap(([payments]) => payments);
+    const allDeliveries = perProgramme.flatMap(([, deliveries]) => deliveries);
+
+    const aggregates = aggregateProgramme(allPayments, allDeliveries);
+    app.cache.set(GLOBAL_AGGREGATES_CACHE_KEY, aggregates, 'programme_aggregate');
+    res.json(aggregates);
+  });
 
   // Bare ProgrammeAggregates (frontend ProgrammeDetailModal reads totals_by_asset,
   // payment_count.{total,settled,pending}, delivery_rate).

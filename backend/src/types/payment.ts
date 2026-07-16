@@ -3,7 +3,14 @@
 
 import type { DeliveryView } from './delivery';
 
-export type PaymentStatus = 'READY' | 'PENDING' | 'SUCCESS' | 'FAILED';
+export type PaymentStatus =
+  | 'DRAFT'
+  | 'READY'
+  | 'PENDING'
+  | 'PAUSED'
+  | 'SUCCESS'
+  | 'FAILED'
+  | 'CANCELED';
 
 /** Payment record as read from the SDP fork (section 2.2, step 2). */
 export interface Payment {

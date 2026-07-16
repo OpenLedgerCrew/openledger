@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express, { type Express, type NextFunction, type Request, type Response } from 'express';
+import { aiRoutes } from './routes/ai';
 import { apiRoutes } from './routes/api';
 import { exportRoutes } from './routes/export';
 import { paymentRoutes } from './routes/payments';
@@ -40,10 +41,19 @@ export function buildApp(deps: AppDeps, options: BuildAppOptions = {}): AppInsta
   // The portal is a public, read-only, no-login surface (O-5), so the browser client is served
   // cross-origin during development (Vite on :5173). Reads only; no credentials.
   app.use(cors({ origin: true, methods: ['GET'] }));
+  // POST /chat is the one write-shaped request the app accepts (a chat message, not a mutation
+  // of programme data), so it needs a JSON body parser.
+  app.use(express.json());
 
   // Mounted under both `/` and `/api` — the frontend calls `/api/...`, existing tests/tools use
   // the no-prefix paths, and both must resolve to the same read model (see docs/FRONTEND_BACKEND_SYNC.md).
-  const routers = [programmeRoutes(app), paymentRoutes(app), exportRoutes(app), apiRoutes(app)];
+  const routers = [
+    programmeRoutes(app),
+    paymentRoutes(app),
+    exportRoutes(app),
+    apiRoutes(app),
+    aiRoutes(app),
+  ];
   for (const router of routers) {
     app.use(router);
     app.use('/api', router);

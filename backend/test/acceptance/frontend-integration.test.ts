@@ -32,6 +32,20 @@ describe('frontend integration contract', () => {
     expect(body.delivery_rate).not.toBeUndefined();
   });
 
+  it('GET /api/aggregates — global aggregates reuse aggregateProgramme, matching the single-programme case', async () => {
+    const [global, perProgramme] = await Promise.all([
+      request(app).get('/api/aggregates'),
+      request(app).get(`/api/programmes/${programme.id}/aggregates`),
+    ]);
+    expect(global.status).toBe(200);
+    // With only one programme in the fork, global and per-programme aggregates must match
+    // exactly (aside from each call's own generated_at timestamp) — proves this reuses
+    // aggregateProgramme rather than a separate computation.
+    const { generated_at: _g, ...globalRest } = global.body;
+    const { generated_at: _p, ...perProgrammeRest } = perProgramme.body;
+    expect(globalRest).toEqual(perProgrammeRest);
+  });
+
   it('GET /api/programmes/:id/payments — honors page + limit, returns { payments, total_pages }', async () => {
     const res = await request(app).get(`/api/programmes/${programme.id}/payments?page=1&limit=5`);
     expect(res.status).toBe(200);

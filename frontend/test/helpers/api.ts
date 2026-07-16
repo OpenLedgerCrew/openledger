@@ -81,8 +81,19 @@ export const noRecordPayment = paymentRow({
   explorer_url: `${EXPLORER_BASE}/tx/${'ef'.repeat(32)}`,
 });
 
+export const programmesListFixture = [{ id: 'prog-1', name: PROGRAMME_NAME, status: 'STARTED' }];
+
+export const globalAggregatesFixture = {
+  totals_by_asset: [{ asset: 'USDC', total: '150.00' }],
+  payment_count: { total: 30, settled: 27, pending: 2, failed: 1 },
+  delivery_rate: 0.5,
+  rate_basis: { confirmed: 1, awaiting_confirmation: 1, excluded_no_delivery_record: 28 },
+  timezone: 'UTC',
+  generated_at: '2026-07-14T12:00:00Z',
+};
+
 export const programmeFixture = {
-  programme: { id: 'prog-1', name: PROGRAMME_NAME },
+  programme: { id: 'prog-1', name: PROGRAMME_NAME, status: 'STARTED' },
   aggregates: {
     totals_by_asset: [
       { asset: 'USDC', total: '150.00' },
@@ -130,6 +141,8 @@ export function apiServer() {
     http.get('*/programmes/:programmeId/payments/:referenceId', () =>
       HttpResponse.json(paymentDetailFixture),
     ),
+    http.get('*/programmes', () => HttpResponse.json({ programmes: programmesListFixture })),
+    http.get('*/aggregates', () => HttpResponse.json(globalAggregatesFixture)),
     http.get('*/programmes/:programmeId', () => HttpResponse.json(programmeFixture)),
   );
 }

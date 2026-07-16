@@ -31,6 +31,7 @@ export const PII_VALUES = [
 export const programme: Programme = {
   id: 'prog-1',
   name: 'Emergency Cash Transfer — Cycle 3',
+  status: 'STARTED',
 };
 
 export function payment(overrides: Partial<Payment> & { reference_id: string }): Payment {
@@ -68,6 +69,9 @@ export function fakeForkClient(data: ForkFixture): SdpForkClient {
   return {
     async getProgramme() {
       return data.programme;
+    },
+    async getProgrammes() {
+      return [data.programme];
     },
     async getPayments() {
       return data.payments;

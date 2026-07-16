@@ -1,32 +1,43 @@
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import { Container, PageShell, Section } from "../components/ui/PageShell";
 import { StatCard } from "../components/ui/StatCard";
 import { Button } from "../components/ui/button";
-
-const programmes = [
-  {
-    title: "Turkana Livelihoods Programme",
-    description: "Cash transfers for fisherfolk in Kalokol, Turkana County",
-    amount: "5.2M KES",
-    beneficiaries: "847",
-  },
-  {
-    title: "Kakuma Refugee Programme",
-    description: "Cash assistance for refugee families in Kakuma camp",
-    amount: "3.8M KES",
-    beneficiaries: "612",
-  },
-  {
-    title: "Omo Valley Cross-Border Programme",
-    description: "Cross-border cash transfers for pastoralists in Omo region",
-    amount: "2.1M KES",
-    beneficiaries: "423",
-  },
-];
+import { fetchGlobalAggregates, fetchProgrammes } from "../api/programmes";
+import { programmeStatusMeta } from "../components/lib/programmeStatus";
+import type { Programme, ProgrammeAggregates } from "../types";
 
 export default function HomePage() {
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
+  const [aggregates, setAggregates] = useState<ProgrammeAggregates | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchProgrammes(), fetchGlobalAggregates()])
+      .then(([programmesData, aggregatesData]) => {
+        if (cancelled) return;
+        setProgrammes(programmesData);
+        setAggregates(aggregatesData);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const totalDisbursed = aggregates?.totals_by_asset
+    .map((t) => `${t.total} ${t.asset}`)
+    .join(", ") ?? "—";
+  const deliveryRate =
+    aggregates?.delivery_rate !== null && aggregates?.delivery_rate !== undefined
+      ? `${(aggregates.delivery_rate * 100).toFixed(1)}%`
+      : "—";
+
   return (
     <PageShell>
       {/* Hero */}
@@ -71,14 +82,18 @@ export default function HomePage() {
       <Section className="pb-10">
         <Container>
           <div className="grid gap-4 md:grid-cols-4">
-            <StatCard label="Total Disbursed" value="45,230,000" hint="KES" />
+            <StatCard label="Total Disbursed" value={totalDisbursed} />
 
-            <StatCard label="Beneficiaries" value="12,847" />
+            <StatCard
+              label="Total Payments"
+              value={aggregates ? aggregates.payment_count.total.toLocaleString() : "—"}
+            />
 
-            <StatCard label="Delivery Rate" value="94.2%" hint="↗" />
+            <StatCard label="Delivery Rate" value={deliveryRate} />
 
-            <StatCard label="Active Programmes" value="3,421" />
+            <StatCard label="Active Programmes" value={programmes.length.toLocaleString()} />
           </div>
+          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
         </Container>
       </Section>
 
@@ -108,46 +123,45 @@ export default function HomePage() {
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
-            {programmes.map((programme) => (
-              <div
-                key={programme.title}
-                className="rounded-lg border border-green-200 bg-yellow-50 p-6 shadow-sm transition hover:shadow-md flex flex-col justify-between"
-              >
-                <div>
-                  <div className="mb-3 flex justify-between">
-                    <h3
-                      className="font-bold font-serif"
-                      style={{ fontFamily: "Fraunces, Georgia, serif" }}
+            {programmes.slice(0, 3).map((programme) => {
+              const statusMeta = programmeStatusMeta(programme.status);
+              return (
+                <div
+                  key={programme.id}
+                  className="rounded-lg border border-green-200 bg-yellow-50 p-6 shadow-sm transition hover:shadow-md flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="mb-3 flex justify-between">
+                      <h3
+                        className="font-bold font-serif"
+                        style={{ fontFamily: "Fraunces, Georgia, serif" }}
+                      >
+                        {programme.name}
+                      </h3>
+
+                      <span
+                        className="rounded px-2 py-1 text-xs font-semibold h-fit"
+                        style={{
+                          backgroundColor: statusMeta.color + "1f",
+                          color: statusMeta.color,
+                        }}
+                      >
+                        {statusMeta.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <Link
+                      to={`/programmes?select=${programme.id}`}
+                      className="inline-block text-sm font-semibold text-green-700 hover:text-green-800"
                     >
-                      {programme.title}
-                    </h3>
-
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 font-semibold h-fit">
-                      Active
-                    </span>
+                      VIEW →
+                    </Link>
                   </div>
-
-                  <p className="text-sm text-gray-600">
-                    {programme.description}
-                  </p>
                 </div>
-
-                <div className="mt-6">
-                  <div className="text-2xl font-bold">{programme.amount}</div>
-
-                  <div className="text-xs text-muted-foreground">
-                    {programme.beneficiaries} beneficiaries
-                  </div>
-
-                  <Link
-                    to={`/programmes?select=${programme.title.replace(/\s+/g, "-").toLowerCase()}`}
-                    className="mt-5 inline-block text-sm font-semibold text-green-700 hover:text-green-800"
-                  >
-                    VIEW →
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Container>
       </Section>

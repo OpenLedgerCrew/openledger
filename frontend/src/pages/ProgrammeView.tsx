@@ -1,102 +1,58 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { fetchProgrammes } from "../api/programmes";
+import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { ProgrammeDetailModal } from "../components/ProgrammeDetailModal";
+import type { Programme } from "../types";
 
-const programmes = [
-  {
-    title: "Turkana Livelihoods Programme",
-    description: "Cash transfers for fisherfolk in Kalokol, Turkana County",
-    period: "Q3 2025 - Q2 2026",
-    budget: "5.2M KES",
-    delivery: "96%",
-    reach: "847",
-    status: "Active",
-    statusColor: "#10b981",
-    location: "Turkana",
-    emoji: "🌱",
-  },
-  {
-    title: "Kakuma Refugee Programme",
-    description: "Cash assistance for refugee families in Kakuma camp",
-    period: "Q1 2025 - Q4 2025",
-    budget: "3.8M KES",
-    delivery: "92%",
-    reach: "612",
-    status: "Active",
-    statusColor: "#10b981",
-    location: "Kakuma",
-    emoji: "⛺",
-  },
-  {
-    title: "Omo Valley Cross-Border Programme",
-    description: "Cross-border cash transfers for pastoralists in Omo region",
-    period: "Q2 2025 - Q1 2026",
-    budget: "2.1M KES",
-    delivery: "88%",
-    reach: "423",
-    status: "On Hold",
-    statusColor: "#d97706",
-    location: "Omo Valley",
-    emoji: "🌍",
-  },
-  {
-    title: "Kakuma Health & Nutrition Programme",
-    description: "Health and nutrition support for refugee communities",
-    period: "Q3 2025 - Q2 2026",
-    budget: "1.8M KES",
-    delivery: "94%",
-    reach: "356",
-    status: "Active",
-    statusColor: "#10b981",
-    location: "Kakuma",
-    emoji: "🏥",
-  },
-];
+const STATUS_FILTER_OPTIONS = ["DRAFT", "READY", "STARTED", "PAUSED", "COMPLETED"];
 
-const stats = [
-  { label: "Total disbursed (KES)", value: "45,230,000" },
-  { label: "Total payments", value: "12,847" },
-  { label: "Delivery rate", value: "94.2%" },
-  { label: "Beneficiaries", value: "3,421" },
-];
-
-export interface ProgrammeViewProps {
-  programmeId?: string;
-}
-
-export const ProgrammeView: React.FC<ProgrammeViewProps> = ({
-  programmeId,
-}) => {
-  const [selectedProg, setSelectedProg] = useState<
-    (typeof programmes)[0] | null
-  >(null);
+export const ProgrammeView: React.FC = () => {
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedProg, setSelectedProg] = useState<Programme | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetchProgrammes()
+      .then((data) => {
+        if (cancelled) return;
+        setProgrammes(data);
+      })
+      .catch((err: Error) => {
+        if (cancelled) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     const selectParam = searchParams.get("select");
     if (selectParam) {
-      const matched = programmes.find(
-        (p) => p.title.replace(/\s+/g, "-").toLowerCase() === selectParam,
-      );
+      const matched = programmes.find((p) => p.id === selectParam);
       if (matched) {
         setSelectedProg(matched);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, programmes]);
 
   const filteredProgrammes = programmes.filter((p) => {
     const query = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      p.title.toLowerCase().includes(query) ||
-      p.location.toLowerCase().includes(query) ||
-      p.description.toLowerCase().includes(query);
-
+    const matchesSearch = p.name.toLowerCase().includes(query);
     const matchesStatus = selectedStatus === "" || p.status === selectedStatus;
-
     return matchesSearch && matchesStatus;
   });
 
@@ -126,73 +82,20 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({
           }}
         >
           <section style={{ marginBottom: 32 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-                gap: 16,
-                marginBottom: 16,
-              }}
-            >
-              <div>
-                <p style={{ margin: 0, fontSize: 14, color: "#6b7280" }}>
-                  Browse all SAPCONE programmes and verify payments
-                </p>
-                <h1
-                  style={{
-                    margin: "8px 0 0",
-                    fontSize: 36,
-                    fontWeight: 700,
-                    fontFamily: "Fraunces, Georgia, serif",
-                  }}
-                >
-                  All Programmes
-                </h1>
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                gap: 16,
-              }}
-            >
-              {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  style={{
-                    backgroundColor: "#ffffff",
-                    borderRadius: 18,
-                    padding: 20,
-                    boxShadow: "0 4px 18px rgba(15, 23, 42, 0.06)",
-                    minWidth: 0,
-                  }}
-                >
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 12,
-                      color: "#6b7280",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    {stat.label}
-                  </p>
-                  <p
-                    style={{
-                      margin: "12px 0 0",
-                      fontSize: 24,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {stat.value}
-                  </p>
-                </div>
-              ))}
+            <div>
+              <p style={{ margin: 0, fontSize: 14, color: "#6b7280" }}>
+                Browse all SAPCONE programmes and verify payments
+              </p>
+              <h1
+                style={{
+                  margin: "8px 0 0",
+                  fontSize: 36,
+                  fontWeight: 700,
+                  fontFamily: "Fraunces, Georgia, serif",
+                }}
+              >
+                All Programmes
+              </h1>
             </div>
           </section>
 
@@ -221,7 +124,7 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({
               <span style={{ color: "#9ca3af", fontSize: 18 }}>🔎</span>
               <input
                 type="text"
-                placeholder="Search by name or location (e.g. Turkana)..."
+                placeholder="Search by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -249,198 +152,135 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({
               }}
             >
               <option value="">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Completed">Completed</option>
-              <option value="On Hold">On Hold</option>
-              <option value="Pending">Pending</option>
+              {STATUS_FILTER_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {programmeStatusMeta(s).label}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Programmes Cards Grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: 20,
-            }}
-          >
-            {filteredProgrammes.map((programme) => (
-              <div
-                key={programme.title}
-                className="programme-card"
-                style={{
-                  backgroundColor: "#ffffff",
-                  borderRadius: 24,
-                  padding: 24,
-                  border: "1px solid #e5e0d8",
-                  boxShadow: "0 8px 30px rgba(15, 23, 42, 0.05)",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "between",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      marginBottom: 14,
-                    }}
-                  >
-                    <h2
-                      style={{
-                        margin: 0,
-                        fontSize: 20,
-                        fontWeight: 700,
-                        lineHeight: 1.2,
-                        fontFamily: "Fraunces, Georgia, serif",
-                      }}
-                    >
-                      {programme.title}
-                    </h2>
-                    <span
-                      style={{
-                        backgroundColor: programme.statusColor + "1f",
-                        color: programme.statusColor,
-                        padding: "6px 12px",
-                        borderRadius: 9999,
-                        fontSize: 12,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {programme.status}
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      margin: "0 0 16px",
-                      color: "#6b7280",
-                      fontSize: 14,
-                    }}
-                  >
-                    {programme.description}
-                  </p>
-                  <p
-                    style={{
-                      margin: 0,
-                      color: "#4b5563",
-                      fontSize: 13,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <span>📅</span>
-                    {programme.period}
-                  </p>
+          {loading && (
+            <div style={{ textAlign: "center", padding: 48, color: "#9ca3af", fontSize: 15 }}>
+              Loading programmes…
+            </div>
+          )}
 
+          {!loading && error && (
+            <div style={{ textAlign: "center", padding: 48, color: "#b23f24", fontSize: 15 }}>
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 20,
+              }}
+            >
+              {filteredProgrammes.map((programme) => {
+                const statusMeta = programmeStatusMeta(programme.status);
+                return (
                   <div
+                    key={programme.id}
+                    className="programme-card"
                     style={{
-                      borderTop: "1px solid #e5e7eb",
-                      margin: "20px 0 0",
-                      paddingTop: 20,
-                      display: "grid",
-                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                      gap: 12,
-                      textAlign: "left",
+                      backgroundColor: "#ffffff",
+                      borderRadius: 24,
+                      padding: 24,
+                      border: "1px solid #e5e0d8",
+                      boxShadow: "0 8px 30px rgba(15, 23, 42, 0.05)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "between",
                     }}
                   >
                     <div>
-                      <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
-                        Budget
-                      </p>
-                      <p
+                      <div
                         style={{
-                          margin: "8px 0 0",
-                          fontSize: 16,
-                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          marginBottom: 14,
                         }}
                       >
-                        {programme.budget}
-                      </p>
+                        <h2
+                          style={{
+                            margin: 0,
+                            fontSize: 20,
+                            fontWeight: 700,
+                            lineHeight: 1.2,
+                            fontFamily: "Fraunces, Georgia, serif",
+                          }}
+                        >
+                          {programme.name}
+                        </h2>
+                        <span
+                          style={{
+                            backgroundColor: statusMeta.color + "1f",
+                            color: statusMeta.color,
+                            padding: "6px 12px",
+                            borderRadius: 9999,
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {statusMeta.label}
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
-                        Delivery
-                      </p>
-                      <p
+                    <div
+                      style={{
+                        marginTop: 20,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <button
+                        id={`view-programme-${programme.id}`}
+                        onClick={() => setSelectedProg(programme)}
                         style={{
-                          margin: "8px 0 0",
-                          fontSize: 16,
+                          background: "none",
+                          border: "none",
+                          color: "#5da76e",
                           fontWeight: 700,
+                          cursor: "pointer",
+                          padding: 0,
+                          fontSize: 14,
                         }}
+                        className="programme-action programme-action-view"
                       >
-                        {programme.delivery}
-                      </p>
-                    </div>
-                    <div>
-                      <p style={{ margin: 0, color: "#6b7280", fontSize: 12 }}>
-                        Reach
-                      </p>
-                      <p
+                        View Programme →
+                      </button>
+                      <button
+                        onClick={() =>
+                          window.open(`/api/programmes/${programme.id}/export.pdf`, "_blank")
+                        }
                         style={{
-                          margin: "8px 0 0",
-                          fontSize: 16,
-                          fontWeight: 700,
+                          background: "none",
+                          border: "none",
+                          color: "#b23f24",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          padding: 0,
+                          fontSize: 13,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
                         }}
+                        className="programme-action programme-action-pdf"
                       >
-                        {programme.reach}
-                      </p>
+                        <span>📄</span> PDF
+                      </button>
                     </div>
                   </div>
-                </div>
-                <div
-                  style={{
-                    marginTop: 20,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <button
-                    id={`view-programme-${programme.title.replace(/\s+/g, "-").toLowerCase()}`}
-                    onClick={() => setSelectedProg(programme)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#5da76e",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      padding: 0,
-                      fontSize: 14,
-                    }}
-                    className="programme-action programme-action-view"
-                  >
-                    View Programme →
-                  </button>
-                  <button
-                    onClick={() =>
-                      window.open(
-                        `/api/programmes/${programme.title.replace(/\s+/g, "-").toLowerCase()}/export.pdf`,
-                        "_blank",
-                      )
-                    }
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#b23f24",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      padding: 0,
-                      fontSize: 13,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                    className="programme-action programme-action-pdf"
-                  >
-                    <span>📄</span> PDF
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         <Footer />
 
@@ -448,15 +288,9 @@ export const ProgrammeView: React.FC<ProgrammeViewProps> = ({
         <ProgrammeDetailModal
           open={selectedProg !== null}
           onClose={() => setSelectedProg(null)}
-          programmeId={
-            selectedProg?.title.replace(/\s+/g, "-").toLowerCase() ?? ""
-          }
-          programmeName={selectedProg?.title ?? ""}
-          programmeDescription={selectedProg?.description}
-          period={selectedProg?.period}
+          programmeId={selectedProg?.id ?? ""}
+          programmeName={selectedProg?.name ?? ""}
           status={selectedProg?.status}
-          statusColor={selectedProg?.statusColor}
-          emoji={selectedProg?.emoji}
         />
       </div>
     </>
