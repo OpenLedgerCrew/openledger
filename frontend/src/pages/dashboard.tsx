@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { Container, PageShell, Section } from "../components/ui/PageShell";
 import { StatCard } from "../components/ui/StatCard";
 import { Button } from "../components/ui/button";
+import { FallbackBadge } from "../components/FallbackBadge";
 import { fetchGlobalAggregates, fetchProgrammes } from "../api/programmes";
 import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import type { Programme, ProgrammeAggregates } from "../types";
@@ -66,21 +67,26 @@ const HOW_IT_WORKS = [
 export default function HomePage() {
   const [programmes, setProgrammes] = useState<Programme[]>([]);
   const [aggregates, setAggregates] = useState<ProgrammeAggregates | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
+  const [waking, setWaking] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchProgrammes(), fetchGlobalAggregates()])
-      .then(([programmesData, aggregatesData]) => {
+    setWaking(false);
+    const onRetry = () => { if (!cancelled) setWaking(true); };
+
+    Promise.all([fetchProgrammes(onRetry), fetchGlobalAggregates(onRetry)]).then(
+      ([programmesResult, aggregatesResult]) => {
         if (cancelled) return;
-        setProgrammes(programmesData);
-        setAggregates(aggregatesData);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      });
+        setProgrammes(programmesResult.data);
+        setAggregates(aggregatesResult.data);
+        setIsFallback(programmesResult.source === "fallback" || aggregatesResult.source === "fallback");
+        setWaking(false);
+      },
+    );
     return () => { cancelled = true; };
-  }, []);
+  }, [retryCount]);
 
   const totalDisbursed =
     aggregates?.totals_by_asset.map((t) => `${t.total} ${t.asset}`).join(", ") ?? "—";
@@ -128,6 +134,12 @@ export default function HomePage() {
       {/* Stats */}
       <Section className="pb-10">
         <Container>
+          {waking && (
+            <p className="mb-4 text-sm text-muted-foreground">
+              Waking up the live server — this can take up to a minute if it's been idle…
+            </p>
+          )}
+          {isFallback && <FallbackBadge onRetry={() => setRetryCount((c) => c + 1)} />}
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
             <StatCard label="Total Disbursed" value={totalDisbursed} />
             <StatCard
@@ -137,7 +149,6 @@ export default function HomePage() {
             <StatCard label="Delivery Rate" value={deliveryRate} />
             <StatCard label="Active Programmes" value={programmes.length.toLocaleString()} />
           </div>
-          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
         </Container>
       </Section>
 

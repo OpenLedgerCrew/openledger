@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { DisclosureBanner } from "../components/DisclosureBanner";
+import { FallbackBadge } from "../components/FallbackBadge";
 import { fetchProgrammes } from "../api/programmes";
 import type { Programme } from "../types";
 
@@ -15,7 +16,9 @@ interface ExportJob {
 export default function PdfExportPage() {
   const [availableProgrammes, setAvailableProgrammes] = useState<Programme[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [waking, setWaking] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [selectedId, setSelectedId] = useState<string>("");
   const [jobs, setJobs] = useState<ExportJob[]>([]);
   const [includePayments, setIncludePayments] = useState(true);
@@ -25,20 +28,18 @@ export default function PdfExportPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchProgrammes()
-      .then((data) => {
-        if (!cancelled) setAvailableProgrammes(data);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setLoadError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    setWaking(false);
+    fetchProgrammes(() => { if (!cancelled) setWaking(true); }).then(({ data, source }) => {
+      if (cancelled) return;
+      setAvailableProgrammes(data);
+      setIsFallback(source === "fallback");
+      setLoading(false);
+      setWaking(false);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [retryCount]);
 
   const handleExport = () => {
     if (!selectedId) {
@@ -166,7 +167,7 @@ export default function PdfExportPage() {
               }}
             >
               <option value="">
-                {loading ? "Loading programmes…" : "— Choose a programme —"}
+                {loading ? (waking ? "Waking up the live server…" : "Loading programmes…") : "— Choose a programme —"}
               </option>
               {availableProgrammes.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -174,8 +175,10 @@ export default function PdfExportPage() {
                 </option>
               ))}
             </select>
-            {loadError && (
-              <p style={{ margin: "8px 0 0", fontSize: 13, color: "#b23f24" }}>{loadError}</p>
+            {isFallback && (
+              <div style={{ marginTop: 8 }}>
+                <FallbackBadge onRetry={() => setRetryCount((c) => c + 1)} />
+              </div>
             )}
           </div>
 

@@ -10,6 +10,7 @@ import { AiSummaryCard } from "../components/AiSummaryCard";
 import { DisclosureBanner } from "../components/DisclosureBanner";
 import { EmailReportButton } from "../components/EmailReportButton";
 import { ExplorerLink } from "../components/ExplorerLink";
+import { FallbackBadge } from "../components/FallbackBadge";
 import { ImpactCharts } from "../components/ImpactCharts";
 import { PaymentDetailsModal } from "../components/PaymentDetailsModal";
 import { Button } from "../components/ui/button";
@@ -25,6 +26,8 @@ export function ProgrammeDetailPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState<PaymentRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [waking, setWaking] = useState(false);
+  const [isFallback, setIsFallback] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const chartsRef = useRef<HTMLDivElement>(null);
 
@@ -32,12 +35,16 @@ export function ProgrammeDetailPage() {
     async (pageNum: number) => {
       if (!programmeId) return;
       setLoading(true);
+      setWaking(false);
       // Falls back to a captured real-data snapshot internally if the backend is unreachable —
       // only genuinely resolves to null when the programme id doesn't exist anywhere.
-      const body = await fetchProgrammeDetail(programmeId, pageNum);
+      const { data: body, source } = await fetchProgrammeDetail(programmeId, pageNum, () =>
+        setWaking(true),
+      );
       if (!body) {
         setNotFound(true);
         setLoading(false);
+        setWaking(false);
         return;
       }
       setProgrammeName(body.name ?? programmeId);
@@ -45,7 +52,9 @@ export function ProgrammeDetailPage() {
       setAggregates(body.aggregates);
       setPayments(body.payments ?? []);
       setTotalPages(body.pagination?.total_pages ?? 1);
+      setIsFallback(source === "fallback");
       setLoading(false);
+      setWaking(false);
     },
     [programmeId],
   );
@@ -154,9 +163,13 @@ export function ProgrammeDetailPage() {
         </nav>
 
         {loading && !aggregates ? (
-          <div className="py-24 text-center text-muted-foreground">Loading programme data…</div>
+          <div className="py-24 text-center text-muted-foreground">
+            {waking ? "Waking up the live server — this can take up to a minute if it's been idle…" : "Loading programme data…"}
+          </div>
         ) : (
           <>
+            {isFallback && <FallbackBadge onRetry={() => fetchData(page)} />}
+
             {/* Page header */}
             <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
               <div>

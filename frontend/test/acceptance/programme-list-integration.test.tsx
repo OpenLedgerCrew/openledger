@@ -70,9 +70,12 @@ describe('programme list -> detail integration', () => {
 
     renderAt(`/programmes/${snapshotId}`);
 
-    expect(await screen.findByText(snapshotDetail.name)).toBeInTheDocument();
+    // A genuine network error (unlike a definitive HTTP status) now retries with backoff before
+    // falling back — see fetchWithRetry in src/api/programmes.ts — so this legitimately takes
+    // longer than the default 1s findByText timeout.
+    expect(await screen.findByText(snapshotDetail.name, {}, { timeout: 15000 })).toBeInTheDocument();
     expect(screen.getByText(snapshotDetail.payments[0].reference_id)).toBeInTheDocument();
-  });
+  }, 20000);
 
   // Regression: a deployment with no /api/* route configured at all (e.g. a static host with no
   // backend rewrite) returns ITS OWN 404 for every request — indistinguishable, from here, from

@@ -6,6 +6,7 @@ import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
+import { FallbackBadge } from "../components/FallbackBadge";
 import type { Programme } from "../types";
 
 const STATUS_FILTER_OPTIONS = ["DRAFT", "READY", "STARTED", "PAUSED", "COMPLETED"];
@@ -14,7 +15,9 @@ export const ProgrammeView: React.FC = () => {
   const navigate = useNavigate();
   const [programmes, setProgrammes] = useState<Programme[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
+  const [waking, setWaking] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [searchParams] = useSearchParams();
@@ -22,13 +25,17 @@ export const ProgrammeView: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setError(null);
-    fetchProgrammes()
-      .then((data) => { if (!cancelled) setProgrammes(data); })
-      .catch((err: Error) => { if (!cancelled) setError(err.message); })
-      .finally(() => { if (!cancelled) setLoading(false); });
+    setWaking(false);
+    const onRetry = () => { if (!cancelled) setWaking(true); };
+    fetchProgrammes(onRetry).then(({ data, source }) => {
+      if (cancelled) return;
+      setProgrammes(data);
+      setIsFallback(source === "fallback");
+      setLoading(false);
+      setWaking(false);
+    });
     return () => { cancelled = true; };
-  }, []);
+  }, [retryCount]);
 
   // Handle ?select=id from home page cards
   useEffect(() => {
@@ -101,15 +108,15 @@ export const ProgrammeView: React.FC = () => {
         </div>
 
         {loading && (
-          <div className="py-24 text-center text-muted-foreground text-sm">Loading programmes…</div>
+          <div className="py-24 text-center text-muted-foreground text-sm">
+            {waking ? "Waking up the live server — this can take up to a minute if it's been idle…" : "Loading programmes…"}
+          </div>
         )}
 
-        {!loading && error && (
-          <div className="py-24 text-center text-destructive text-sm">{error}</div>
-        )}
-
-        {!loading && !error && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {!loading && (
+          <>
+            {isFallback && <FallbackBadge onRetry={() => setRetryCount((c) => c + 1)} />}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredProgrammes.map((programme) => {
               const statusMeta = programmeStatusMeta(programme.status);
               return (
@@ -154,7 +161,8 @@ export const ProgrammeView: React.FC = () => {
                 No programmes match your search.
               </div>
             )}
-          </div>
+            </div>
+          </>
         )}
       </main>
 
