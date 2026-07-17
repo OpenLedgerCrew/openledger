@@ -13,6 +13,23 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths(),
   ],
+  // Required for @stellar/stellar-sdk (used by the donation flow) to resolve Node's
+  // Buffer/global in a browser bundle.
+  define: {
+    global: "globalThis",
+  },
+  resolve: {
+    alias: {
+      buffer: "buffer",
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: "globalThis",
+      },
+    },
+  },
   server: {
     proxy: {
       "/api": {
