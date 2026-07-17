@@ -5,7 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 // Overridable so a local dev server can point at a remotely-tunneled backend
 // (e.g. VITE_BACKEND_URL=https://xxxx.ngrok-free.dev npm run dev).
-const backendTarget = process.env.VITE_BACKEND_URL || "http://localhost:3001";
+const backendTarget = process.env.VITE_BACKEND_URL || "https://openledger-psi.vercel.app";
 
 export default defineConfig({
   plugins: [
