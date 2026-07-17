@@ -1,62 +1,190 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Settings,
+  SunMoon,
+  Volume2,
+  VolumeX,
+  Mic,
+  Square,
+  X,
+} from "lucide-react";
+import { VoiceOverlay } from "./VoiceOverlay";
 
 const HIGH_CONTRAST_KEY = "openledger:high-contrast";
 
-const VOICE_COMMANDS = [
-  { phrase: "“read page” / “read this”", does: "reads the current page aloud" },
-  { phrase: "“stop” / “stop reading”", does: "stops reading" },
-  { phrase: "“high contrast”", does: "toggles high contrast mode" },
-  { phrase: "“go to programmes”", does: "opens the Programmes page" },
-  { phrase: "“go home”", does: "opens the Home page" },
-  { phrase: "“go to about”", does: "opens the About page" },
-  { phrase: "“go to contact”", does: "opens the Contact page" },
-];
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => ISpeechRecognition;
+    webkitSpeechRecognition?: new () => ISpeechRecognition;
+  }
+}
 
-/**
- * Global accessibility controls, mounted once at the app root so every page gets them. A
- * floating speed-dial FAB (matching the chat widget's floating style) fans three controls out
- * in a quarter-circle above the main button:
- * - High contrast mode for low-vision users (persisted, applied via a root CSS class).
- * - Read-page-aloud for blind/low-vision users, using the browser's built-in speech
- *   synthesis (no external API, works offline).
- * - Voice command via the Web Speech API's SpeechRecognition, feature-detected since it's
- *   Chromium-only; a hover/focus panel lists the exact phrases it understands.
- */
+interface ISpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((event: ISpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: ISpeechRecognitionErrorEvent) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface ISpeechRecognitionErrorEvent {
+  error: string;
+  message: string;
+}
+
+interface ISpeechRecognitionEvent {
+  resultIndex: number;
+  results: ISpeechRecognitionResultList;
+}
+
+interface ISpeechRecognitionResultList {
+  length: number;
+  [index: number]: ISpeechRecognitionResult;
+}
+
+interface ISpeechRecognitionResult {
+  length: number;
+  isFinal: boolean;
+  [index: number]: ISpeechRecognitionAlternative;
+}
+
+interface ISpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+function getSpeechRecognitionCtor(): (new () => ISpeechRecognition) | null {
+  return (window.SpeechRecognition ?? window.webkitSpeechRecognition) ?? null;
+}
+
 export function AccessibilityToolbar() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [listening, setListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
-  const [showVoiceHelp, setShowVoiceHelp] = useState(false);
+  const [voiceActive, setVoiceActive] = useState(false);
+  const [voicePaused, setVoicePaused] = useState(false);
   const [heard, setHeard] = useState<string | null>(null);
-  const recognitionRef = useRef<any>(null);
-  const heardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const wakeRef = useRef<ISpeechRecognition | null>(null);
+  const heardTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref mirrors state so callbacks always read current value (avoids stale closure)
+  const pausedRef = useRef(false);
+  const restartingRef = useRef(false);
+
+  // ── Init (support detection only) ────────────────────────────────────────
   useEffect(() => {
     const saved = localStorage.getItem(HIGH_CONTRAST_KEY) === "1";
     setHighContrast(saved);
     document.documentElement.classList.toggle("high-contrast", saved);
 
-    const SpeechRecognitionCtor =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    setVoiceSupported(Boolean(SpeechRecognitionCtor) && "speechSynthesis" in window);
+    const Ctor = getSpeechRecognitionCtor();
+    setVoiceSupported(Boolean(Ctor) && "speechSynthesis" in window);
 
     return () => {
       if (heardTimeoutRef.current) clearTimeout(heardTimeoutRef.current);
+      restartingRef.current = false;
+      try { wakeRef.current?.abort(); } catch { /* ignore */ }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleHighContrast = () => {
+  // ── Wake-word listener lifecycle ─────────────────────────────────────────
+  // Only one SpeechRecognition session can run at a time, so this listener must
+  // yield the mic while VoiceOverlay's own command recognizer is active, and
+  // resume once the overlay closes (unless explicitly paused).
+  useEffect(() => {
+    if (!voiceSupported) return;
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor) return;
+
+    if (voiceActive) {
+      try { wakeRef.current?.abort(); } catch { /* ignore */ }
+    } else if (!pausedRef.current) {
+      initWakeRecognition(Ctor);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceActive, voiceSupported]);
+
+  function initWakeRecognition(Ctor: new () => ISpeechRecognition) {
+    if (wakeRef.current) {
+      try { wakeRef.current.abort(); } catch { /* ignore */ }
+    }
+    try {
+      const rec = new Ctor();
+      rec.lang = "en-US";
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.maxAlternatives = 1;
+
+      rec.onresult = (event: ISpeechRecognitionEvent) => {
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript.toLowerCase();
+          // Wake phrase: any utterance containing both "open" and "ledger"
+          if (transcript.includes("open") && transcript.includes("ledger")) {
+            setVoiceActive(true);
+            pausedRef.current = false;
+            setVoicePaused(false);
+          }
+        }
+      };
+
+      rec.onend = () => {
+        // Auto-restart unless explicitly paused or component is unmounting
+        if (!pausedRef.current && !restartingRef.current) {
+          restartingRef.current = true;
+          setTimeout(() => {
+            restartingRef.current = false;
+            if (!pausedRef.current && wakeRef.current === rec) {
+              try { rec.start(); } catch { /* already running or unavailable */ }
+            }
+          }, 300);
+        }
+      };
+
+      rec.onerror = (event: ISpeechRecognitionErrorEvent) => {
+        // "not-allowed" means mic permission denied — don't retry
+        if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+          setVoiceSupported(false);
+          return;
+        }
+        // For other errors (network, aborted) restart after a short delay
+        if (!pausedRef.current) {
+          setTimeout(() => {
+            if (!pausedRef.current && wakeRef.current === rec) {
+              try { rec.start(); } catch { /* ignore */ }
+            }
+          }, 1000);
+        }
+      };
+
+      wakeRef.current = rec;
+      rec.start();
+    } catch {
+      // SpeechRecognition not available in this context (e.g. Firefox, non-HTTPS)
+      setVoiceSupported(false);
+    }
+  }
+
+  // ── High contrast ──────────────────────────────────────────────────────
+  const toggleHighContrast = useCallback(() => {
     setHighContrast((prev) => {
       const next = !prev;
       document.documentElement.classList.toggle("high-contrast", next);
       localStorage.setItem(HIGH_CONTRAST_KEY, next ? "1" : "0");
       return next;
     });
-  };
+  }, []);
 
-  const readPageAloud = () => {
+  // ── TTS ────────────────────────────────────────────────────────────────
+  const readPageAloud = useCallback(() => {
     if (!("speechSynthesis" in window)) return;
     if (speaking) {
       window.speechSynthesis.cancel();
@@ -73,221 +201,210 @@ export function AccessibilityToolbar() {
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
     setSpeaking(true);
-  };
+  }, [speaking]);
 
-  const announceHeard = (transcript: string, action: string) => {
-    setHeard(`Heard "${transcript}" → ${action}`);
+  const stopReading = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setSpeaking(false);
+  }, []);
+
+  // ── Announce heard ─────────────────────────────────────────────────────
+  const announceHeard = useCallback((transcript: string, action: string) => {
+    setHeard(`"${transcript}" → ${action}`);
     if (heardTimeoutRef.current) clearTimeout(heardTimeoutRef.current);
     heardTimeoutRef.current = setTimeout(() => setHeard(null), 4000);
-  };
+  }, []);
 
-  const handleVoiceCommand = (transcript: string) => {
-    const c = transcript.toLowerCase();
-    if (c.includes("high contrast")) {
-      toggleHighContrast();
-      announceHeard(transcript, "toggled high contrast");
-    } else if (c.includes("stop")) {
-      window.speechSynthesis.cancel();
-      setSpeaking(false);
+  // ── Voice command dispatcher ───────────────────────────────────────────
+  const handleVoiceCommand = useCallback((transcript: string) => {
+    const c = transcript.toLowerCase().trim();
+
+    if (c.includes("stop")) {
+      stopReading();
       announceHeard(transcript, "stopped reading");
+      setVoiceActive(false);
     } else if (c.includes("read")) {
       readPageAloud();
       announceHeard(transcript, "reading the page");
+      setVoiceActive(false);
+    } else if (c.includes("high contrast")) {
+      toggleHighContrast();
+      announceHeard(transcript, "toggled high contrast");
+      setVoiceActive(false);
     } else if (c.includes("programme") || c.includes("program")) {
       announceHeard(transcript, "opening Programmes");
-      window.location.assign("/programmes");
+      setVoiceActive(false);
+      navigate("/programmes");
     } else if (c.includes("home")) {
       announceHeard(transcript, "opening Home");
-      window.location.assign("/");
+      setVoiceActive(false);
+      navigate("/");
     } else if (c.includes("about")) {
       announceHeard(transcript, "opening About");
-      window.location.assign("/about");
+      setVoiceActive(false);
+      navigate("/about");
     } else if (c.includes("contact")) {
       announceHeard(transcript, "opening Contact");
-      window.location.assign("/contact");
+      setVoiceActive(false);
+      navigate("/contact");
+    } else if (c.includes("pause")) {
+      pausedRef.current = true;
+      setVoicePaused(true);
+      try { wakeRef.current?.stop(); } catch { /* ignore */ }
+      announceHeard(transcript, "voice detection paused");
+      setVoiceActive(false);
+    } else if (c.includes("resume")) {
+      pausedRef.current = false;
+      setVoicePaused(false);
+      // setVoiceActive(false) below triggers the wake-listener-lifecycle effect, which
+      // restarts the wake recognizer now that pausedRef is false — no manual restart needed here.
+      announceHeard(transcript, "voice detection resumed");
+      setVoiceActive(false);
+    } else if (c.includes("close") || c.includes("dismiss")) {
+      setVoiceActive(false);
     } else {
-      announceHeard(transcript, "not recognized — try one of the listed commands");
+      announceHeard(transcript, "not recognized");
     }
-  };
+  }, [stopReading, readPageAloud, toggleHighContrast, navigate, announceHeard]);
 
-  const toggleListening = () => {
-    const SpeechRecognitionCtor =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognitionCtor) return;
-
-    if (listening) {
-      recognitionRef.current?.stop();
-      setListening(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognitionCtor();
-    recognition.lang = "en-US";
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.onresult = (event: any) => {
-      const transcript = event.results?.[0]?.[0]?.transcript ?? "";
-      if (transcript) handleVoiceCommand(transcript);
-    };
-    recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
-    recognitionRef.current = recognition;
-    recognition.start();
-    setListening(true);
-  };
-
-  // Quarter-circle fan: three slots arcing from straight-up to straight-left of the main
-  // button, so the cluster opens into the empty space above/left of the bottom-right corner.
+  // ── FAB slots (quarter-circle above/left of main FAB) ─────────────────
   const slots = [
-    { bottom: 68, right: 0 }, // up
-    { bottom: 48, right: 48 }, // diagonal
-    { bottom: 0, right: 68 }, // left
+    { bottom: 68, right: 0 },   // straight up
+    { bottom: 48, right: 48 },  // diagonal
+    { bottom: 0,  right: 68 },  // straight left
   ];
 
-  const items: Array<{ key: string; render: (slot: { bottom: number; right: number }) => React.ReactNode }> = [
-    {
-      key: "contrast",
-      render: (slot) => (
+  return (
+    <>
+      {/* Voice overlay */}
+      {voiceActive && (
+        <VoiceOverlay
+          onClose={() => setVoiceActive(false)}
+          paused={voicePaused}
+          onCommand={handleVoiceCommand}
+        />
+      )}
+
+      {/* Stop-reading button — only visible while TTS is playing */}
+      {speaking && (
+        <button
+          onClick={stopReading}
+          aria-label="Stop reading aloud"
+          title="Stop reading aloud"
+          style={{
+            position: "fixed",
+            bottom: 84,
+            right: 20,
+            zIndex: 1999,
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            border: "1.5px solid var(--destructive)",
+            backgroundColor: "var(--destructive)",
+            color: "var(--destructive-foreground)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+          }}
+        >
+          <VolumeX size={18} aria-hidden="true" />
+        </button>
+      )}
+
+      {/* Toolbar — anchored bottom-right */}
+      <div
+        role="toolbar"
+        aria-label="Accessibility controls"
+        style={{ position: "fixed", bottom: 20, right: 20, zIndex: 1998, width: 56, height: 56 }}
+      >
+        {/* Contrast */}
         <FabButton
-          slot={slot}
+          slot={slots[0]}
           open={open}
           active={highContrast}
           onClick={toggleHighContrast}
-          ariaPressed={highContrast}
           label="Toggle high contrast mode"
-          icon="◑"
+          icon={<SunMoon size={17} aria-hidden="true" />}
         />
-      ),
-    },
-    {
-      key: "read",
-      render: (slot) => (
+
+        {/* Read aloud */}
         <FabButton
-          slot={slot}
+          slot={slots[1]}
           open={open}
           active={speaking}
           onClick={readPageAloud}
-          ariaPressed={speaking}
-          label={speaking ? "Stop reading this page aloud" : "Read this page aloud"}
-          icon={speaking ? "■" : "\u{1F50A}"}
+          label={speaking ? "Stop reading aloud" : "Read this page aloud"}
+          icon={speaking ? <Square size={14} aria-hidden="true" /> : <Volume2 size={17} aria-hidden="true" />}
         />
-      ),
-    },
-  ];
 
-  if (voiceSupported) {
-    items.push({
-      key: "voice",
-      render: (slot) => (
-        <div
-          style={{
-            position: "absolute",
-            bottom: slot.bottom,
-            right: slot.right,
-            opacity: open ? 1 : 0,
-            transform: open ? "scale(1)" : "scale(0.4)",
-            pointerEvents: open ? "auto" : "none",
-            transition: "opacity 0.2s ease, transform 0.2s ease",
-          }}
-          onMouseEnter={() => setShowVoiceHelp(true)}
-          onMouseLeave={() => setShowVoiceHelp(false)}
-        >
-          <button
-            type="button"
-            onClick={toggleListening}
-            onFocus={() => setShowVoiceHelp(true)}
-            onBlur={() => setShowVoiceHelp(false)}
-            aria-pressed={listening}
-            aria-label="Voice command — see supported phrases on hover or focus"
-            title="Voice command"
-            style={fabButtonStyle(listening)}
+        {/* Voice (only if mic is supported) */}
+        {voiceSupported && (
+          <FabButton
+            slot={slots[2]}
+            open={open}
+            active={voiceActive || voicePaused}
+            onClick={() => setVoiceActive((v) => !v)}
+            label={
+              voiceActive ? "Close voice overlay" :
+              voicePaused ? "Voice paused — tap to open" :
+              "Open voice commands"
+            }
+            icon={<Mic size={17} aria-hidden="true" />}
+          />
+        )}
+
+        {/* Heard toast */}
+        {heard && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 10px)",
+              right: 0,
+              maxWidth: 260,
+              backgroundColor: "var(--foreground)",
+              color: "var(--background)",
+              borderRadius: 10,
+              padding: "8px 12px",
+              fontSize: 12,
+              boxShadow: "0 12px 30px rgba(0,0,0,0.25)",
+              whiteSpace: "nowrap",
+            }}
           >
-            {listening ? "■" : "\u{1F399}"}
-          </button>
+            {heard}
+          </div>
+        )}
 
-          {showVoiceHelp && (
-            <div
-              role="tooltip"
-              style={{
-                position: "absolute",
-                bottom: "calc(100% + 10px)",
-                right: 0,
-                width: 260,
-                backgroundColor: "#1a1714",
-                color: "#fff",
-                borderRadius: 12,
-                padding: "12px 14px",
-                fontSize: 12,
-                lineHeight: 1.5,
-                boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
-              }}
-            >
-              <p style={{ margin: "0 0 6px", fontWeight: 700 }}>Try saying:</p>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-                {VOICE_COMMANDS.map((c) => (
-                  <li key={c.phrase}>
-                    <span style={{ color: "#8fe3a3" }}>{c.phrase}</span> — {c.does}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      ),
-    });
-  }
-
-  return (
-    <div
-      role="toolbar"
-      aria-label="Accessibility controls"
-      style={{ position: "fixed", bottom: 20, right: 92, zIndex: 1999, width: 56, height: 56 }}
-    >
-      {items.map((item, i) => (
-        <React.Fragment key={item.key}>{item.render(slots[i])}</React.Fragment>
-      ))}
-
-      {heard && (
-        <div
-          role="status"
+        {/* Main FAB — Settings icon, rightmost */}
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-label={open ? "Close accessibility options" : "Open accessibility options"}
           style={{
-            position: "absolute",
-            bottom: "calc(100% + 10px)",
-            right: 0,
-            maxWidth: 260,
-            backgroundColor: "#1a1714",
-            color: "#fff",
-            borderRadius: 10,
-            padding: "8px 12px",
-            fontSize: 12,
-            boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            border: "none",
+            backgroundColor: "var(--foreground)",
+            color: "var(--background)",
+            cursor: "pointer",
+            boxShadow: "0 12px 30px rgba(26, 23, 20, 0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {heard}
-        </div>
-      )}
-
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-label={open ? "Close accessibility options" : "Open accessibility options"}
-        title="Accessibility options"
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: "50%",
-          border: "none",
-          backgroundColor: "#1a1714",
-          color: "#fff",
-          fontSize: 22,
-          cursor: "pointer",
-          boxShadow: "0 12px 30px rgba(26, 23, 20, 0.35)",
-        }}
-      >
-        {open ? "✕" : "♿"}
-      </button>
-    </div>
+          {open
+            ? <X size={20} aria-hidden="true" />
+            : <Settings size={22} aria-hidden="true" />
+          }
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -296,7 +413,6 @@ function FabButton({
   open,
   active,
   onClick,
-  ariaPressed,
   label,
   icon,
 }: {
@@ -304,15 +420,14 @@ function FabButton({
   open: boolean;
   active: boolean;
   onClick: () => void;
-  ariaPressed: boolean;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-pressed={ariaPressed}
+      aria-pressed={active}
       aria-label={label}
       title={label}
       style={{
@@ -323,27 +438,20 @@ function FabButton({
         transform: open ? "scale(1)" : "scale(0.4)",
         pointerEvents: open ? "auto" : "none",
         transition: "opacity 0.2s ease, transform 0.2s ease",
-        ...fabButtonStyle(active),
+        width: 44,
+        height: 44,
+        borderRadius: "50%",
+        border: `1.5px solid ${active ? "var(--foreground)" : "var(--border)"}`,
+        backgroundColor: active ? "var(--foreground)" : "var(--card)",
+        color: active ? "var(--background)" : "var(--foreground)",
+        cursor: "pointer",
+        boxShadow: "0 8px 20px rgba(15, 23, 42, 0.18)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       {icon}
     </button>
   );
-}
-
-function fabButtonStyle(active: boolean): React.CSSProperties {
-  return {
-    width: 44,
-    height: 44,
-    borderRadius: "50%",
-    border: `1.5px solid ${active ? "#1a1714" : "#e5e0d8"}`,
-    backgroundColor: active ? "#1a1714" : "#ffffff",
-    color: active ? "#ffffff" : "#1a1714",
-    fontSize: 17,
-    cursor: "pointer",
-    boxShadow: "0 8px 20px rgba(15, 23, 42, 0.18)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
 }

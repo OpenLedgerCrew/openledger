@@ -1,7 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { DisclosureBanner } from "../components/DisclosureBanner";
+import { fetchProgrammes } from "../api/programmes";
+import type { Programme } from "../types";
 
 interface ExportJob {
   programmeId: string;
@@ -10,14 +12,10 @@ interface ExportJob {
   error?: string;
 }
 
-const AVAILABLE_PROGRAMMES = [
-  { id: "tlp-2025", name: "Turkana Livelihoods Programme", period: "Q3 2025 – Q2 2026" },
-  { id: "krp-2025", name: "Kakuma Refugee Programme", period: "Q1 2025 – Q4 2025" },
-  { id: "ovc-2025", name: "Omo Valley Cross-Border Programme", period: "Q2 2025 – Q1 2026" },
-  { id: "khn-2025", name: "Kakuma Health & Nutrition Programme", period: "Q3 2025 – Q2 2026" },
-];
-
 export default function PdfExportPage() {
+  const [availableProgrammes, setAvailableProgrammes] = useState<Programme[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("");
   const [jobs, setJobs] = useState<ExportJob[]>([]);
   const [includePayments, setIncludePayments] = useState(true);
@@ -25,12 +23,29 @@ export default function PdfExportPage() {
   const [includeDelivery, setIncludeDelivery] = useState(true);
   const selectRef = useRef<HTMLSelectElement>(null);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetchProgrammes()
+      .then((data) => {
+        if (!cancelled) setAvailableProgrammes(data);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setLoadError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleExport = () => {
     if (!selectedId) {
       selectRef.current?.focus();
       return;
     }
-    const prog = AVAILABLE_PROGRAMMES.find((p) => p.id === selectedId);
+    const prog = availableProgrammes.find((p) => p.id === selectedId);
     if (!prog) return;
 
     // Check if already exporting
@@ -78,7 +93,7 @@ export default function PdfExportPage() {
       });
   };
 
-  const selected = AVAILABLE_PROGRAMMES.find((p) => p.id === selectedId);
+  const selected = availableProgrammes.find((p) => p.id === selectedId);
 
   return (
     <div
@@ -150,13 +165,18 @@ export default function PdfExportPage() {
                 paddingRight: 44,
               }}
             >
-              <option value="">— Choose a programme —</option>
-              {AVAILABLE_PROGRAMMES.map((p) => (
+              <option value="">
+                {loading ? "Loading programmes…" : "— Choose a programme —"}
+              </option>
+              {availableProgrammes.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.period})
+                  {p.name}
                 </option>
               ))}
             </select>
+            {loadError && (
+              <p style={{ margin: "8px 0 0", fontSize: 13, color: "#b23f24" }}>{loadError}</p>
+            )}
           </div>
 
           {/* Selected programme info */}
@@ -176,7 +196,6 @@ export default function PdfExportPage() {
               <span style={{ fontSize: 24 }}>📋</span>
               <div>
                 <p style={{ margin: 0, fontWeight: 700, color: "#1a1714", fontSize: 14 }}>{selected.name}</p>
-                <p style={{ margin: "2px 0 0", fontSize: 12, color: "#5da76e" }}>📅 {selected.period}</p>
               </div>
             </div>
           )}

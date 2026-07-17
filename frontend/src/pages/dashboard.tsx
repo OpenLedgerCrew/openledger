@@ -1,32 +1,94 @@
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Eye,
+  ShieldCheck,
+  MessageSquare,
+  Mic,
+  FileText,
+  Volume2,
+} from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import { Container, PageShell, Section } from "../components/ui/PageShell";
 import { StatCard } from "../components/ui/StatCard";
 import { Button } from "../components/ui/button";
+import { fetchGlobalAggregates, fetchProgrammes } from "../api/programmes";
+import { programmeStatusMeta } from "../components/lib/programmeStatus";
+import type { Programme, ProgrammeAggregates } from "../types";
 
-const programmes = [
+const HOW_IT_WORKS = [
   {
-    title: "Turkana Livelihoods Programme",
-    description: "Cash transfers for fisherfolk in Kalokol, Turkana County",
-    amount: "5.2M KES",
-    beneficiaries: "847",
+    icon: BookOpen,
+    title: "Browse Programmes",
+    description:
+      'Click "Programmes" in the navigation bar to see all active SAPCONE aid programmes and their current disbursement status.',
   },
   {
-    title: "Kakuma Refugee Programme",
-    description: "Cash assistance for refugee families in Kakuma camp",
-    amount: "3.8M KES",
-    beneficiaries: "612",
+    icon: Eye,
+    title: "Open a Programme",
+    description:
+      'Click "View →" on any programme card to open its dedicated detail page with statistics, charts, and the full payment ledger.',
   },
   {
-    title: "Omo Valley Cross-Border Programme",
-    description: "Cross-border cash transfers for pastoralists in Omo region",
-    amount: "2.1M KES",
-    beneficiaries: "423",
+    icon: ShieldCheck,
+    title: "Verify a Payment",
+    description:
+      'Inside a programme, click any payment row to open its details. Then click "Verify on Stellar ↗" to check the transaction hash on the public blockchain — no login required.',
+  },
+  {
+    icon: MessageSquare,
+    title: "Use the Chat Assistant",
+    description:
+      'Click the "Assistant" button in the top navigation bar to open the chat sidebar. Ask questions about payment verification, the disclosure, PDF reports, or privacy.',
+  },
+  {
+    icon: Mic,
+    title: "Use Voice Commands",
+    description:
+      'Say "open ledger" to activate the microphone. A command overlay will appear listing all available voice commands — navigate, read aloud, toggle contrast, and more.',
+  },
+  {
+    icon: FileText,
+    title: "Export a Report",
+    description:
+      'Inside a programme detail page, click "Export PDF" to download a full impact report including statistics, charts, the payment table, and the honest-limits disclosure.',
+  },
+  {
+    icon: Volume2,
+    title: "Read a Report Aloud",
+    description:
+      'Open the accessibility toolbar (bottom-right wheel icon), click the speaker button to read the current page aloud. Or say "read page" after activating voice mode.',
   },
 ];
 
 export default function HomePage() {
+  const [programmes, setProgrammes] = useState<Programme[]>([]);
+  const [aggregates, setAggregates] = useState<ProgrammeAggregates | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchProgrammes(), fetchGlobalAggregates()])
+      .then(([programmesData, aggregatesData]) => {
+        if (cancelled) return;
+        setProgrammes(programmesData);
+        setAggregates(aggregatesData);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const totalDisbursed =
+    aggregates?.totals_by_asset.map((t) => `${t.total} ${t.asset}`).join(", ") ?? "—";
+  const deliveryRate =
+    aggregates?.delivery_rate !== null && aggregates?.delivery_rate !== undefined
+      ? `${(aggregates.delivery_rate * 100).toFixed(1)}%`
+      : "—";
+
   return (
     <PageShell>
       {/* Hero */}
@@ -36,30 +98,26 @@ export default function HomePage() {
             ● NGO Transparency Portal
           </span>
 
-          <h1
-            className="mt-6 text-5xl font-bold font-serif"
-            style={{ fontFamily: "Fraunces, Georgia, serif" }}
-          >
-            Open<span className="text-green-700">Ledger</span>
+          <h1 className="mt-6 text-5xl font-bold font-serif text-foreground">
+           Sapcone <span className="text-primary">OpenLedger</span>
           </h1>
 
-          <p className="mt-3 text-xl text-green-700 font-semibold">
+          <p className="mt-3 text-xl text-primary font-semibold">
             Transparency. Verifiable. Public.
           </p>
 
-          <p className="mx-auto mt-4 max-w-2xl text-gray-600">
-            Publicly verifiable on the Stellar blockchain. Empowering donors
-            with real-time financial tracking and proof of impact.
+          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+            Publicly verifiable on the Stellar blockchain. Empowering donors with real-time
+            financial tracking and proof of impact.
           </p>
 
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <Button asChild>
               <Link to="/programmes">
                 View Programmes
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-
             <Button variant="outline" asChild>
               <Link to="/about">Learn More</Link>
             </Button>
@@ -70,151 +128,118 @@ export default function HomePage() {
       {/* Stats */}
       <Section className="pb-10">
         <Container>
-          <div className="grid gap-4 md:grid-cols-4">
-            <StatCard label="Total Disbursed" value="45,230,000" hint="KES" />
-
-            <StatCard label="Beneficiaries" value="12,847" />
-
-            <StatCard label="Delivery Rate" value="94.2%" hint="↗" />
-
-            <StatCard label="Active Programmes" value="3,421" />
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <StatCard label="Total Disbursed" value={totalDisbursed} />
+            <StatCard
+              label="Total Payments"
+              value={aggregates ? aggregates.payment_count.total.toLocaleString() : "—"}
+            />
+            <StatCard label="Delivery Rate" value={deliveryRate} />
+            <StatCard label="Active Programmes" value={programmes.length.toLocaleString()} />
           </div>
+          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
         </Container>
       </Section>
 
-      {/* Programmes */}
+      {/* Programme previews */}
       <Section className="pb-12">
         <Container>
-          <div className="mb-8 flex justify-between items-center">
+          <div className="mb-8 flex flex-wrap justify-between items-center gap-4">
             <div>
-              <h2
-                className="text-3xl font-bold font-serif"
-                style={{ fontFamily: "Fraunces, Georgia, serif" }}
-              >
-                Current Programmes
-              </h2>
-
-              <p className="text-sm text-muted-foreground">
-                Live funding data and disbursement status.
-              </p>
+              <h2 className="text-3xl font-bold font-serif text-foreground">Current Programmes</h2>
+              <p className="text-sm text-muted-foreground">Live funding data and disbursement status.</p>
             </div>
-
-            <Link
-              to="/programmes"
-              className="text-sm text-green-700 font-semibold"
-            >
+            <Link to="/programmes" className="text-sm text-primary font-semibold hover:underline">
               See all programmes →
             </Link>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {programmes.map((programme) => (
-              <div
-                key={programme.title}
-                className="rounded-lg border border-green-200 bg-yellow-50 p-6 shadow-sm transition hover:shadow-md flex flex-col justify-between"
-              >
-                <div>
-                  <div className="mb-3 flex justify-between">
-                    <h3
-                      className="font-bold font-serif"
-                      style={{ fontFamily: "Fraunces, Georgia, serif" }}
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+            {programmes.slice(0, 3).map((programme) => {
+              const statusMeta = programmeStatusMeta(programme.status);
+              return (
+                <div
+                  key={programme.id}
+                  className="rounded-xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="mb-3 flex justify-between items-start gap-2">
+                      <h3 className="font-bold font-serif text-foreground leading-snug">{programme.name}</h3>
+                      <span
+                        className="rounded px-2 py-1 text-xs font-semibold flex-shrink-0 h-fit"
+                        style={{
+                          backgroundColor: statusMeta.color + "1f",
+                          color: statusMeta.color,
+                        }}
+                      >
+                        {statusMeta.label}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-6 flex justify-end">
+                    <Button
+                      asChild
+                      size="sm"
                     >
-                      {programme.title}
-                    </h3>
-
-                    <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-700 font-semibold h-fit">
-                      Active
-                    </span>
+                      <Link to={`/programmes/${programme.id}`}>
+                        View
+                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
                   </div>
-
-                  <p className="text-sm text-gray-600">
-                    {programme.description}
-                  </p>
                 </div>
-
-                <div className="mt-6">
-                  <div className="text-2xl font-bold">{programme.amount}</div>
-
-                  <div className="text-xs text-muted-foreground">
-                    {programme.beneficiaries} beneficiaries
-                  </div>
-
-                  <Link
-                    to={`/programmes?select=${programme.title.replace(/\s+/g, "-").toLowerCase()}`}
-                    className="mt-5 inline-block text-sm font-semibold text-green-700 hover:text-green-800"
-                  >
-                    VIEW →
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Container>
       </Section>
 
-      {/* How It Works */}
+      {/* How It Works — 7 numbered steps */}
       <Section className="py-16">
         <Container>
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="rounded-lg bg-stone-100 p-8">
-              <h2
-                className="mb-8 text-3xl font-bold font-serif"
-                style={{ fontFamily: "Fraunces, Georgia, serif" }}
-              >
-                How It Works
-              </h2>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold font-serif text-foreground">How It Works</h2>
+            <p className="mt-2 text-muted-foreground">
+              Seven steps to verify aid, explore data, and use every feature of OpenLedger.
+            </p>
+          </div>
 
-              <div className="space-y-8">
-                <div className="flex gap-4">
-                  <span style={{ color: "#5da76e", fontSize: "20px" }}>✓</span>
-                  <div>
-                    <h3 className="font-semibold">Funds deposited</h3>
-                    <p className="text-sm text-gray-600">
-                      Donations are converted into digital assets.
-                    </p>
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {HOW_IT_WORKS.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.title}
+                  className="rounded-2xl border border-border bg-card p-6 flex flex-col gap-3"
+                >
+                  {/* Number badge + icon + bold title all on the same row */}
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold"
+                      style={{
+                        backgroundColor: "var(--primary)",
+                        color: "var(--primary-foreground)",
+                      }}
+                    >
+                      {index + 1}
+                    </span>
+                    <Icon
+                      size={18}
+                      aria-hidden="true"
+                      className="flex-shrink-0"
+                      style={{ color: "var(--primary)" }}
+                    />
+                    <h3 className="font-serif font-bold text-foreground leading-snug">
+                      {step.title}
+                    </h3>
                   </div>
+                  {/* Description below */}
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {step.description}
+                  </p>
                 </div>
-
-                <div className="flex gap-4">
-                  <span style={{ color: "#5da76e", fontSize: "20px" }}>✓</span>
-                  <div>
-                    <h3 className="font-semibold">Immutable Tracking</h3>
-                    <p className="text-sm text-gray-600">
-                      Every transaction is anchored to Stellar.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <span style={{ color: "#5da76e", fontSize: "20px" }}>✓</span>
-                  <div>
-                    <h3 className="font-semibold">Field Verification</h3>
-                    <p className="text-sm text-gray-600">
-                      Receipts and confirmations are uploaded afterwards.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg border bg-white p-8 shadow">
-              <p className="text-sm text-muted-foreground">TX HASH</p>
-
-              <div className="mt-6 space-y-4">
-                <div className="h-3 rounded bg-gray-200"></div>
-                <div className="h-3 rounded bg-gray-200"></div>
-                <div className="h-3 w-2/3 rounded bg-gray-200"></div>
-              </div>
-
-              <div className="mt-10 rounded border bg-green-50 p-4 text-center text-green-700 font-semibold">
-                Verified on Stellar
-              </div>
-
-              <div className="mt-8 flex items-center gap-2 text-xl font-bold">
-                <span style={{ color: "#5da76e" }}>✓</span>
-                Verified
-              </div>
-            </div>
+              );
+            })}
           </div>
         </Container>
       </Section>

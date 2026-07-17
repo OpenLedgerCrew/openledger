@@ -1,6 +1,13 @@
 // Mirror of the backend's public API shapes (doc sections 4.2, 6.1, 6.2).
 
-export type PaymentStatus = "READY" | "PENDING" | "SUCCESS" | "FAILED";
+export type PaymentStatus =
+  | "DRAFT"
+  | "READY"
+  | "PENDING"
+  | "PAUSED"
+  | "SUCCESS"
+  | "FAILED"
+  | "CANCELED";
 
 /** Three-state delivery model per D-7 (section 5.1). */
 export type DeliveryState =
@@ -51,18 +58,10 @@ export interface ProgrammeAggregates {
   timezone: "UTC";
   generated_at: string;
 }
+/** Matches the backend's real GET /programmes shape exactly (backend/src/types/programme.ts). */
 export interface Programme {
   id: string;
   name: string;
-  description: string;
-
-  totalDisbursed: number;
-  paymentCount: number;
-  deliveryRate: number;
-  beneficiaries: number;
-
-  startDate: string;
-  endDate: string;
-
-  status: "ACTIVE" | "COMPLETED" | "ON_HOLD";
+  /** The fork's disbursement status (DRAFT/READY/STARTED/PAUSED/COMPLETED), passed through as-is. */
+  status: string;
 }

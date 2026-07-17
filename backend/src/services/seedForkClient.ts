@@ -78,7 +78,11 @@ function seedData(): { programme: Programme; payments: Payment[]; deliveries: De
     // REF-004 has no delivery record at all — "Not applicable" (D-7).
   ];
 
-  return { programme: { id: 'prog-1', name: 'Emergency Cash Transfer — Cycle 3' }, payments, deliveries };
+  return {
+    programme: { id: 'prog-1', name: 'Emergency Cash Transfer — Cycle 3', status: 'STARTED' },
+    payments,
+    deliveries,
+  };
 }
 
 /** In-memory SdpForkClient backed by the seed dataset. Read-only, no network, no write methods. */
@@ -87,6 +91,9 @@ export function createSeedForkClient(): SdpForkClient {
   return {
     async getProgramme() {
       return data.programme;
+    },
+    async getProgrammes() {
+      return [data.programme];
     },
     async getPayments() {
       return data.payments;

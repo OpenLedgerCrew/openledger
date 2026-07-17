@@ -39,7 +39,7 @@ OpenLedger reads from a fork of DisburseFlow's data model and displays that data
 | Routing | React Router DOM 7 |
 | UI components | Radix UI primitives, shadcn/ui |
 | Styling | Tailwind CSS 4, custom CSS |
-| HTTP client | Axios (via Vite dev proxy to backend) |
+| HTTP client | Native `fetch` (via Vite dev proxy to backend) |
 | PDF generation | WKHTMLTOPDF (server-side, via Express backend) |
 | Blockchain verification | Stellar network — deep links to stellar.expert, no runtime API calls |
 | Testing | Vitest, Testing Library, MSW |
@@ -150,19 +150,31 @@ The compiled output will be placed in `frontend/dist/`.
 
 ---
 
+## Running Against a Real DisburseFlow (G3) Fork Locally
+
+By default the backend serves in-memory seed data (see `backend/README.md`), which is enough to
+develop the UI without any other services running. To develop against the **real** DisburseFlow
+fork (G3) instead — real disbursements, real payments, real Stellar transaction hashes, seeded
+demo data, and remote/ngrok access for teammates — see **[`docs/RUNBOOK.md`](docs/RUNBOOK.md)**
+for the full step-by-step and a troubleshooting section covering every failure mode we've hit
+setting this up.
+
+---
+
 ## Environment Variables
 
-Create a `.env.local` file in the `frontend/` directory with the following variables:
+The frontend has **no `.env` file** in normal local development — every API call is a relative
+`fetch('/api/...')`, resolved by the Vite dev proxy in `frontend/vite.config.ts`. The only
+frontend-side override is an env var passed on the command line, not a `.env` file (Vite config
+files run in Node before `.env` loading applies to client code):
 
-```env
-# Base URL for the DisburseFlow fork API
-VITE_API_BASE_URL=http://localhost:3001
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_BACKEND_URL` | `http://localhost:3001` | Where the `/api/*` dev proxy forwards to. Override to point your local frontend at a remote/tunneled backend — see `docs/RUNBOOK.md`. |
 
-# Base URL for the Stellar explorer (use testnet during development)
-VITE_EXPLORER_BASE_URL=https://stellar.expert/explorer/testnet
-```
-
-During development, the Vite proxy (configured in `vite.config.ts`) forwards all `/api/*` requests to the backend automatically, so `VITE_API_BASE_URL` is only used in production builds.
+The **backend**'s configuration is a real `.env` file (`openledger/backend/.env`, copy from
+`.env.example`) — see `backend/README.md` for the full list (`SDP_FORK_BASE_URL`, `SDP_API_KEY`,
+`OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `EXPLORER_BASE_URL`, `PORT`, `HOST`).
 
 ---
 

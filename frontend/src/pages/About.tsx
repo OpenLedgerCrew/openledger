@@ -1,144 +1,152 @@
-import React, { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { PageShell, Container, Section } from "../components/ui/PageShell";
+import { WalletConnect } from "../components/donation/WalletConnect";
+import { Stats } from "../components/donation/Stats";
+import { DonateForm } from "../components/donation/DonateForm";
+import { DonationHistory } from "../components/donation/DonationHistory";
+import { fetchStats, fetchDonations } from "../components/donation/lib/contract";
+import type { WalletState, ContractStats, DonationRecord } from "../components/donation/lib/types";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "../components/ui/button";
+const DEFAULT_WALLET: WalletState = { connected: false, publicKey: null, network: null };
 
 export function About() {
+  const location = useLocation();
   const [showDonateModal, setShowDonateModal] = useState(false);
-  const [donateStep, setDonateStep] = useState(1); // 1: Select details, 2: Send payment, 3: Success
-  const [asset, setAsset] = useState("USDC");
-  const [amount, setAmount] = useState("100");
-  const [txHash, setTxHash] = useState("");
+  const [wallet, setWallet] = useState<WalletState>(DEFAULT_WALLET);
+  const [stats, setStats] = useState<ContractStats | null>(null);
+  const [donations, setDonations] = useState<DonationRecord[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const handleDonateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setDonateStep(2);
-  };
-
-  const handleConfirmSent = () => {
-    // Generate a mock Stellar tx hash
-    const chars = "0123456789abcdef";
-    let hash = "";
-    for (let i = 0; i < 64; i++) {
-      hash += chars[Math.floor(Math.random() * 16)];
+  const loadDonationData = useCallback(async () => {
+    setStatsLoading(true);
+    setHistoryLoading(true);
+    setLoadError(null);
+    try {
+      const [s, d] = await Promise.all([fetchStats(), fetchDonations()]);
+      setStats(s);
+      setDonations(d);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "Failed to load contract data");
+    } finally {
+      setStatsLoading(false);
+      setHistoryLoading(false);
     }
-    setTxHash(hash);
-    setDonateStep(3);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (location.state && (location.state as { openDonateModal?: boolean }).openDonateModal) {
+      setShowDonateModal(true);
+    }
+  }, [location.state]);
+
+  // Public, anonymous contract reads only — no wallet touched. Fires when the donate modal
+  // opens (not on page mount) so a plain visit to /about never makes an RPC call.
+  useEffect(() => {
+    if (showDonateModal) loadDonationData();
+  }, [showDonateModal, loadDonationData]);
 
   return (
     <PageShell>
-      <div style={{ backgroundColor: "#fcf5ec", minHeight: "80vh", color: "#1a1714" }}>
+      <div className="bg-background text-foreground" style={{ minHeight: "80vh" }}>
         <Section className="pt-16 pb-12">
           <Container size="narrow">
             <h1
-              style={{
-                fontFamily: "Fraunces, Georgia, serif",
-                fontSize: "42px",
-                fontWeight: 700,
-                textAlign: "center",
-                marginBottom: "16px",
-              }}
+              className="font-serif text-center font-bold text-foreground"
+              style={{ fontSize: "clamp(28px, 5vw, 42px)", marginBottom: 16 }}
             >
               About OpenLedger
             </h1>
             <p
-              style={{
-                fontSize: "18px",
-                lineHeight: "1.6",
-                color: "#6b7280",
-                textAlign: "center",
-                marginBottom: "40px",
-              }}
+              className="text-center text-muted-foreground"
+              style={{ fontSize: "clamp(15px, 2.5vw, 18px)", lineHeight: 1.6, marginBottom: 40 }}
             >
               A public transparency portal powered by the Stellar network to verify humanitarian aid disbursements.
             </p>
 
-            <div style={{ lineHeight: "1.8", fontSize: "15px", color: "#374151" }}>
-              <p style={{ marginBottom: "24px" }}>
-                OpenLedger is developed by <strong>SAPCONE</strong> to bring absolute clarity, verifiability, and trust to cash transfer programs in East Africa.
-                By anchoring each aid payment to the public blockchain, donors and the public can trace funds in real-time.
+            <div style={{ lineHeight: "1.8", fontSize: 15, color: "var(--foreground)" }}>
+              <p style={{ marginBottom: 24 }}>
+                OpenLedger is developed by <strong>SAPCONE</strong> to bring absolute clarity, verifiability, and
+                trust to cash transfer programs in East Africa. By anchoring each aid payment to the public
+                blockchain, donors and the public can trace funds in real-time.
               </p>
 
               <h2
+                className="font-serif font-bold"
                 style={{
-                  fontFamily: "Fraunces, Georgia, serif",
-                  fontSize: "24px",
-                  fontWeight: 700,
-                  marginTop: "32px",
-                  marginBottom: "16px",
-                  borderBottom: "2px solid #5da76e",
-                  paddingBottom: "6px",
+                  fontSize: 24,
+                  marginTop: 32,
+                  marginBottom: 16,
+                  borderBottom: "2px solid var(--primary)",
+                  paddingBottom: 6,
+                  color: "var(--foreground)",
                 }}
               >
                 Our Core Principles
               </h2>
-              <ul style={{ listStyleType: "none", paddingLeft: 0, marginBottom: "32px" }}>
-                <li style={{ marginBottom: "16px", display: "flex", gap: "12px", alignItems: "start" }}>
-                  <span style={{ color: "#5da76e", fontWeight: "bold" }}>✓</span>
-                  <div>
-                    <strong>Blockchain Verification:</strong> Every disbursement settles on the public Stellar network, generating an immutable, cryptographic proof of value transfer.
-                  </div>
-                </li>
-                <li style={{ marginBottom: "16px", display: "flex", gap: "12px", alignItems: "start" }}>
-                  <span style={{ color: "#5da76e", fontWeight: "bold" }}>✓</span>
-                  <div>
-                    <strong>Privacy First:</strong> No Personal Identifiable Information (PII) is uploaded to the ledger. We protect donor and recipient identities.
-                  </div>
-                </li>
-                <li style={{ marginBottom: "16px", display: "flex", gap: "12px", alignItems: "start" }}>
-                  <span style={{ color: "#5da76e", fontWeight: "bold" }}>✓</span>
-                  <div>
-                    <strong>Field Audit Trail:</strong> Final last-mile delivery is audited and verified through SAPCONE's local field officers.
-                  </div>
-                </li>
+
+              <ul style={{ listStyleType: "none", paddingLeft: 0, marginBottom: 32 }}>
+                {[
+                  {
+                    title: "Blockchain Verification",
+                    body: "Every disbursement settles on the public Stellar network, generating an immutable, cryptographic proof of value transfer.",
+                  },
+                  {
+                    title: "Privacy First",
+                    body: "No Personal Identifiable Information (PII) is uploaded to the ledger. We protect donor and recipient identities.",
+                  },
+                  {
+                    title: "Field Audit Trail",
+                    body: "Final last-mile delivery is audited and verified through SAPCONE's local field officers.",
+                  },
+                ].map((item) => (
+                  <li
+                    key={item.title}
+                    style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "flex-start" }}
+                  >
+                    <CheckCircle2
+                      size={20}
+                      aria-hidden="true"
+                      style={{ color: "var(--primary)", flexShrink: 0, marginTop: 1 }}
+                    />
+                    <div>
+                      <strong style={{ color: "var(--foreground)" }}>{item.title}:</strong>{" "}
+                      <span style={{ color: "var(--muted-foreground)" }}>{item.body}</span>
+                    </div>
+                  </li>
+                ))}
               </ul>
 
+              {/* Support Mission */}
               <div
                 style={{
-                  backgroundColor: "#5da76e1a",
-                  border: "1.5px dashed #5da76e",
-                  borderRadius: "16px",
-                  padding: "24px",
+                  backgroundColor: "color-mix(in oklch, var(--primary) 10%, var(--card))",
+                  border: "1.5px dashed var(--primary)",
+                  borderRadius: 16,
+                  padding: 24,
                   textAlign: "center",
-                  marginTop: "40px",
+                  marginTop: 40,
                 }}
               >
-                <h3
-                  style={{
-                    fontFamily: "Fraunces, Georgia, serif",
-                    fontSize: "20px",
-                    fontWeight: 700,
-                    marginBottom: "12px",
-                    color: "#1a1714",
-                  }}
-                >
+                <h3 className="font-serif font-bold" style={{ fontSize: 20, marginBottom: 12, color: "var(--foreground)" }}>
                   Support Our Mission
                 </h3>
-                <p style={{ color: "#4b5563", fontSize: "14px", marginBottom: "20px" }}>
-                  Your support enables us to expand transparency tools to more programs and communities. Donate on-chain to directly fund cash transfer systems.
+                <p style={{ color: "var(--muted-foreground)", fontSize: 14, marginBottom: 20 }}>
+                  Your support enables us to expand transparency tools to more programs and communities.
+                  Donate on-chain to directly fund cash transfer systems.
                 </p>
-                <button
-                  onClick={() => {
-                    setShowDonateModal(true);
-                    setDonateStep(1);
-                  }}
-                  style={{
-                    backgroundColor: "#5da76e",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "12px",
-                    padding: "12px 28px",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    boxShadow: "0 4px 14px rgba(93, 167, 110, 0.4)",
-                    transition: "transform 0.2s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+
+                 <Button
+                  onClick={() => setShowDonateModal(true)}
+                  size="lg"
+                  className="flex items-center gap-2 mx-auto"
                 >
-                  Donate to OpenLedger
-                </button>
+                  <CheckCircle2 size={18} />
+                  Donate to SAPCONE
+                </Button>
               </div>
             </div>
           </Container>
@@ -168,7 +176,9 @@ export function About() {
               backgroundColor: "#ffffff",
               borderRadius: "24px",
               width: "100%",
-              maxWidth: "480px",
+              maxWidth: "640px",
+              maxHeight: "90vh",
+              overflowY: "auto",
               padding: "32px",
               boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
               position: "relative",
@@ -197,217 +207,62 @@ export function About() {
               ✕
             </button>
 
-            {donateStep === 1 && (
-              <form onSubmit={handleDonateSubmit}>
-                <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "24px", fontWeight: 700, marginBottom: "16px" }}>
-                  Select Donation Amount
-                </h3>
-                <div style={{ marginBottom: "20px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#6b7280", marginBottom: "8px" }}>
-                    Select Asset
-                  </label>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    {["USDC", "XLM", "KES"].map((cur) => (
-                      <button
-                        type="button"
-                        key={cur}
-                        onClick={() => setAsset(cur)}
-                        style={{
-                          flex: 1,
-                          padding: "10px",
-                          borderRadius: "10px",
-                          border: asset === cur ? "2px solid #5da76e" : "1px solid #d1d5db",
-                          backgroundColor: asset === cur ? "#5da76e14" : "#ffffff",
-                          color: asset === cur ? "#5da76e" : "#374151",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {cur}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "24px", fontWeight: 700, marginBottom: "6px" }}>
+              Donate to OpenLedger
+            </h3>
+            <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "20px" }}>
+              Donations settle on-chain via a Stellar Soroban smart contract — connect a wallet
+              to send XLM directly, no intermediary.
+            </p>
 
-                <div style={{ marginBottom: "24px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#6b7280", marginBottom: "8px" }}>
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "16px",
-                      fontWeight: 600,
-                      outline: "none",
-                    }}
-                  />
-                </div>
+            <WalletConnect
+              wallet={wallet}
+              onConnect={setWallet}
+              onDisconnect={() => setWallet(DEFAULT_WALLET)}
+            />
 
+            <Stats stats={stats} loading={statsLoading} />
+
+            {loadError && (
+              <div
+                style={{
+                  backgroundColor: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: "10px",
+                  padding: "12px 14px",
+                  marginBottom: "20px",
+                  fontSize: "13px",
+                  color: "#b91c1c",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                }}
+                role="alert"
+              >
+                <span>Could not reach contract: {loadError}</span>
                 <button
-                  type="submit"
+                  onClick={loadDonationData}
                   style={{
-                    width: "100%",
-                    backgroundColor: "#5da76e",
-                    color: "#ffffff",
-                    padding: "14px",
-                    borderRadius: "12px",
-                    border: "none",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  Continue
-                </button>
-              </form>
-            )}
-
-            {donateStep === 2 && (
-              <div style={{ textAlign: "center" }}>
-                <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "22px", fontWeight: 700, marginBottom: "12px" }}>
-                  Send Donation
-                </h3>
-                <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "20px" }}>
-                  Please send exactly <strong>{amount} {asset}</strong> to the Stellar address below.
-                </p>
-
-                {/* QR Code Placeholder */}
-                <div
-                  style={{
-                    width: "160px",
-                    height: "160px",
-                    backgroundColor: "#f5f5f5",
-                    margin: "0 auto 20px",
-                    border: "1px solid #eee",
-                    borderRadius: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    position: "relative",
-                  }}
-                >
-                  <div style={{ width: "120px", height: "120px", border: "4px solid #1a1714", position: "relative" }}>
-                    <div style={{ position: "absolute", top: 10, left: 10, right: 10, bottom: 10, background: "#5da76e" }}></div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    backgroundColor: "#fcf5ec",
-                    padding: "12px",
-                    borderRadius: "10px",
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    padding: "6px 12px",
                     fontSize: "12px",
-                    fontFamily: "monospace",
-                    wordBreak: "break-all",
-                    border: "1px solid #e5e0d8",
-                    color: "#1a1714",
-                    marginBottom: "24px",
-                  }}
-                >
-                  GBXTLP...DONATE...SAPCONE...KEY
-                </div>
-
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText("GBXTLPDONATESAPCONEKEY");
-                      alert("Address copied!");
-                    }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #d1d5db",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Copy Address
-                  </button>
-                  <button
-                    onClick={handleConfirmSent}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#5da76e",
-                      color: "#ffffff",
-                      border: "none",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    I Have Sent Funds
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {donateStep === 3 && (
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "50%",
-                    backgroundColor: "#5da76e1a",
-                    color: "#5da76e",
-                    fontSize: "32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 20px",
-                  }}
-                >
-                  ✓
-                </div>
-                <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "22px", fontWeight: 700, marginBottom: "12px" }}>
-                  Thank You!
-                </h3>
-                <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "20px" }}>
-                  Your donation of <strong>{amount} {asset}</strong> has been received and verified.
-                </p>
-
-                <div
-                  style={{
-                    backgroundColor: "#f5f5f5",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    textAlign: "left",
-                    marginBottom: "24px",
-                  }}
-                >
-                  <div style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280" }}>TRANSACTION HASH</div>
-                  <div style={{ fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all", marginTop: "4px" }}>
-                    {txHash}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setShowDonateModal(false)}
-                  style={{
-                    width: "100%",
-                    backgroundColor: "#1a1714",
-                    color: "#ffffff",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    border: "none",
                     fontWeight: 700,
+                    color: "#b91c1c",
                     cursor: "pointer",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  Close
+                  Retry
                 </button>
               </div>
             )}
+
+            <DonateForm wallet={wallet} onSuccess={loadDonationData} />
+
+            <DonationHistory donations={donations} loading={historyLoading} />
           </div>
         </div>
       )}
@@ -416,6 +271,10 @@ export function About() {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
       `}</style>
     </PageShell>

@@ -14,6 +14,14 @@ const PAGE_SIZE = 25;
 export function programmeRoutes(app: AppInstance): Router {
   const router = Router();
 
+  // Thin listing — id + name only, same shape as the Programme type. Callers needing
+  // aggregates/payments for a given programme still go through GET /programmes/:programmeId.
+  router.get('/programmes', async (req, res) => {
+    const { forkClient } = app.deps;
+    const programmes = await forkClient.getProgrammes();
+    res.json({ programmes });
+  });
+
   router.get('/programmes/:programmeId', async (req, res) => {
     const { programmeId } = req.params;
     const pageParam = req.query.page as string | undefined;

@@ -43,11 +43,14 @@ export function aggregateProgramme(
         payment_count.settled += 1;
         totalsByAsset.set(p.asset, (totalsByAsset.get(p.asset) ?? 0) + toMinorUnits(p.amount));
         break;
+      case 'DRAFT':
       case 'READY':
       case 'PENDING':
+      case 'PAUSED':
         payment_count.pending += 1;
         break;
       case 'FAILED':
+      case 'CANCELED':
         payment_count.failed += 1;
         break;
     }

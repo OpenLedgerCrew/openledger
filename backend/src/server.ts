@@ -9,6 +9,7 @@ import { createSeedForkClient } from './services/seedForkClient';
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || '0.0.0.0';
 const SDP_FORK_BASE_URL = process.env.SDP_FORK_BASE_URL;
+const SDP_API_KEY = process.env.SDP_API_KEY;
 const EXPLORER_BASE_URL =
   process.env.EXPLORER_BASE_URL || 'https://stellar.expert/explorer/testnet';
 
@@ -21,7 +22,10 @@ const EXPLORER_BASE_URL =
  */
 function buildForkClient(): SdpForkClient {
   if (SDP_FORK_BASE_URL) {
-    return createSdpForkClient({ baseUrl: SDP_FORK_BASE_URL });
+    if (!SDP_API_KEY) {
+      throw new Error('SDP_API_KEY is required when SDP_FORK_BASE_URL is set');
+    }
+    return createSdpForkClient({ baseUrl: SDP_FORK_BASE_URL, apiKey: SDP_API_KEY });
   }
   return createSeedForkClient();
 }
