@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { DisclosureBanner } from "../components/DisclosureBanner";
 import { ExplorerLink } from "../components/ExplorerLink";
+import { Button } from "../components/ui/button";
 
 export interface PaymentDetailProps {
   programmeId: string;
@@ -132,9 +133,10 @@ export function PaymentDetail({ programmeId, referenceId }: PaymentDetailProps) 
                 <ExplorerLink
                   txHash={data.funds_leg.tx_hash}
                   baseUrl="https://stellar.expert/explorer/testnet"
-                  className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/95 transition-colors"
                 >
-                  Verify Funds Leg
+                  <Button size="sm">
+                    Verify Funds Leg
+                  </Button>
                 </ExplorerLink>
               </div>
             </div>
@@ -154,9 +156,10 @@ export function PaymentDetail({ programmeId, referenceId }: PaymentDetailProps) 
                 <ExplorerLink
                   txHash={data.delivery_leg.anchoring_tx_hash}
                   baseUrl="https://stellar.expert/explorer/testnet"
-                  className="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground border border-border px-4 py-2 text-sm font-semibold shadow-sm hover:bg-muted transition-colors"
                 >
-                  Verify Delivery Leg
+                  <Button variant="secondary" size="sm">
+                    Verify Delivery Leg
+                  </Button>
                 </ExplorerLink>
               </div>
             </div>

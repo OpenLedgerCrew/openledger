@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FileText, X } from "lucide-react";
+import { FileText, X, ArrowRight, Eye } from "lucide-react";
 import type { PaymentRow, ProgrammeAggregates } from "../types";
 import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import { Header } from "../components/Header";
@@ -11,6 +11,7 @@ import { EmailReportButton } from "../components/EmailReportButton";
 import { ExplorerLink } from "../components/ExplorerLink";
 import { ImpactCharts } from "../components/ImpactCharts";
 import { PaymentDetailsModal } from "../components/PaymentDetailsModal";
+import { Button } from "../components/ui/button";
 
 export function ProgrammeDetailPage() {
   const { programmeId } = useParams<{ programmeId: string }>();
@@ -185,35 +186,14 @@ export function ProgrammeDetailPage() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <button
+                <Button
+                  variant="outline"
                   onClick={handleExportPdf}
                   aria-label="Export PDF report"
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 10,
-                    border: "1.5px solid var(--foreground)",
-                    backgroundColor: "transparent",
-                    color: "var(--foreground)",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    transition: "background 0.15s, color 0.15s",
-                    minHeight: 44,
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--foreground)";
-                    (e.currentTarget as HTMLButtonElement).style.color = "var(--background)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-                    (e.currentTarget as HTMLButtonElement).style.color = "var(--foreground)";
-                  }}
                 >
-                  <FileText size={13} aria-hidden="true" /> Export PDF
-                </button>
+                  <FileText size={16} aria-hidden="true" />
+                  Export PDF
+                </Button>
                 <EmailReportButton
                   programmeId={programmeId!}
                   programmeName={programmeName}
@@ -267,12 +247,12 @@ export function ProgrammeDetailPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ backgroundColor: "var(--muted)", borderBottom: "1px solid var(--border)" }}>
-                      {["Reference", "Amount", "Status", "Settlement", "Delivery"].map((h) => (
+                      {["Reference", "Amount", "Status", "Settlement", "Delivery", ""].map((h) => (
                         <th
                           key={h}
                           style={{
                             padding: "10px 14px",
-                            textAlign: "left",
+                            textAlign: h === "" ? "right" : "left",
                             fontWeight: 600,
                             color: "var(--muted-foreground)",
                             fontSize: 11,
@@ -290,26 +270,13 @@ export function ProgrammeDetailPage() {
                     {payments.map((p, idx) => (
                       <tr
                         key={p.reference_id}
-                        onClick={() => setSelectedPayment(p)}
                         style={{
                           borderBottom: idx < payments.length - 1 ? "1px solid var(--border)" : "none",
                           transition: "background 0.12s",
-                          cursor: "pointer",
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLTableRowElement).style.backgroundColor = "var(--muted)";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLTableRowElement).style.backgroundColor = "transparent";
                         }}
                       >
                         <td style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--foreground)" }}>
-                          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            {p.reference_id}
-                            <span style={{ fontSize: 10, color: "var(--success)", fontWeight: 700, opacity: 0.7 }}>
-                              View →
-                            </span>
-                          </span>
+                          {p.reference_id}
                         </td>
                         <td style={{ padding: "10px 14px", color: "var(--foreground)" }}>
                           {p.amount} {p.asset}
@@ -341,6 +308,18 @@ export function ProgrammeDetailPage() {
                         </td>
                         <td style={{ padding: "10px 14px" }}>
                           <DeliveryCell delivery={p.delivery} />
+                        </td>
+                        <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedPayment(p)}
+                            aria-label={`View payment ${p.reference_id}`}
+                            className="text-primary hover:bg-primary/10"
+                          >
+                            <Eye size={16} className="mr-1" />
+                            View
+                          </Button>
                         </td>
                       </tr>
                     ))}
@@ -484,23 +463,13 @@ function DeliveryCell({ delivery }: { delivery?: PaymentRow["delivery"] }) {
 
 function PagBtn({ label, disabled, onClick }: { label: string; disabled: boolean; onClick: () => void }) {
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={onClick}
       disabled={disabled}
-      style={{
-        padding: "7px 14px",
-        borderRadius: 10,
-        border: "1px solid var(--border)",
-        backgroundColor: disabled ? "var(--muted)" : "var(--card)",
-        color: disabled ? "var(--muted-foreground)" : "var(--foreground)",
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: disabled ? "not-allowed" : "pointer",
-        transition: "background 0.15s",
-        minHeight: 44,
-      }}
     >
       {label}
-    </button>
+    </Button>
   );
 }

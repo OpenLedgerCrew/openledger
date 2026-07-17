@@ -1,13 +1,57 @@
 import React, { useState } from "react";
 import { PageShell, Container, Section } from "../components/ui/PageShell";
+import { Button } from "../components/ui/button";
+import emailjs from "@emailjs/browser";
 
 export function Contact() {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const emailAddress = "sapcorndemo@gmail.com";
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(emailAddress);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error(error);
+      alert("Unable to copy email address.");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+
+    setLoading(true);
+
+    try {
+        await emailjs.send(
+            import.meta.env.VITE_EMAILJS_SERVICE_ID,
+            import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+            {
+                from_name: formData.name,
+                from_email: formData.email,
+                message: formData.message,
+            },
+            import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        );
+
+        setSubmitted(true);
+
+        setFormData({
+            name: "",
+            email: "",
+            message: "",
+        });
+    } catch (error) {
+        console.error(error);
+        alert("Failed to send message.");
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (
@@ -141,32 +185,39 @@ export function Contact() {
                       />
                     </div>
 
-                    <button
-                      type="submit"
-                      style={{
-                        width: "100%",
-                        backgroundColor: "#5da76e",
-                        color: "#ffffff",
-                        padding: "12px",
-                        borderRadius: "10px",
-                        border: "none",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Send Message
-                    </button>
+                   <Button
+                    type="submit"
+                    className="w-full"
+                    size="lg"
+                    disabled={loading}
+                  >
+                    {loading ? "Sending..." : "Send Message"}
+                  </Button>
                   </form>
                 )}
               </div>
 
               {/* Info section */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", textAlign: "center" }}>
-                <div style={{ backgroundColor: "#ffffff", borderRadius: "18px", padding: "20px", border: "1px solid #e5e0d8" }}>
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  style={{
+                    backgroundColor: "#ffffff",
+                    borderRadius: "18px",
+                    padding: "20px",
+                    border: "1px solid #e5e0d8",
+                    cursor: "pointer",
+                    textAlign: "center",
+                  }}
+                >
                   <span style={{ fontSize: "20px" }}>✉</span>
                   <h4 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "16px", fontWeight: 700, margin: "8px 0" }}>Email</h4>
-                  <p style={{ color: "#6b7280", margin: 0, fontSize: "14px" }}>info@sapcone.org</p>
-                </div>
+                  <p style={{ color: "#6b7280", margin: 0, fontSize: "14px" }}>{emailAddress}</p>
+                  <p style={{ color: "#5da76e", margin: "12px 0 0", fontSize: "12px" }}>
+                    {copied ? "Copied to clipboard!" : "Click to copy"}
+                  </p>
+                </button>
                 <div style={{ backgroundColor: "#ffffff", borderRadius: "18px", padding: "20px", border: "1px solid #e5e0d8" }}>
                   <span style={{ fontSize: "20px" }}>📍</span>
                   <h4 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "16px", fontWeight: 700, margin: "8px 0" }}>Office</h4>

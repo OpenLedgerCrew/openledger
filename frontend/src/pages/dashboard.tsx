@@ -177,16 +177,15 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="mt-6 flex justify-end">
-                    <Link
-                      to={`/programmes/${programme.id}`}
-                      className="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold min-h-[44px] transition-opacity hover:opacity-80"
-                      style={{
-                        backgroundColor: "var(--primary)",
-                        color: "var(--primary-foreground)",
-                      }}
+                    <Button
+                      asChild
+                      size="sm"
                     >
-                      View →
-                    </Link>
+                      <Link to={`/programmes/${programme.id}`}>
+                        View
+                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               );
