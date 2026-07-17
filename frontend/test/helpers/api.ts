@@ -81,7 +81,9 @@ export const noRecordPayment = paymentRow({
   explorer_url: `${EXPLORER_BASE}/tx/${'ef'.repeat(32)}`,
 });
 
-export const programmesListFixture = [{ id: 'prog-1', name: PROGRAMME_NAME, status: 'STARTED' }];
+export const PROGRAMME_ID = 'prog-1';
+
+export const programmesListFixture = [{ id: PROGRAMME_ID, name: PROGRAMME_NAME, status: 'STARTED' }];
 
 export const globalAggregatesFixture = {
   totals_by_asset: [{ asset: 'USDC', total: '150.00' }],
@@ -92,8 +94,12 @@ export const globalAggregatesFixture = {
   generated_at: '2026-07-14T12:00:00Z',
 };
 
+// Flat shape matching the real backend contract (backend/src/routes/programmes.ts) — name/status
+// are top-level fields, not nested under a `programme` key.
 export const programmeFixture = {
-  programme: { id: 'prog-1', name: PROGRAMME_NAME, status: 'STARTED' },
+  programme_id: PROGRAMME_ID,
+  name: PROGRAMME_NAME,
+  status: 'STARTED',
   aggregates: {
     totals_by_asset: [
       { asset: 'USDC', total: '150.00' },
