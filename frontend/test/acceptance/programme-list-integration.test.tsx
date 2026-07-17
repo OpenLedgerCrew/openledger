@@ -62,9 +62,25 @@ describe('programme list -> detail integration', () => {
     expect(screen.queryByText('PAY-001-TLP')).not.toBeInTheDocument();
   });
 
-  it('renders the captured fallback snapshot when the backend is unreachable for a real snapshot id', async () => {
+  it('renders the captured fallback snapshot when the backend is unreachable (network error) for a real snapshot id', async () => {
     server.use(
       http.get('*/programmes/:programmeId', () => HttpResponse.error()),
+    );
+    const [snapshotId, snapshotDetail] = Object.entries(FALLBACK_SNAPSHOT.programmeDetails)[0];
+
+    renderAt(`/programmes/${snapshotId}`);
+
+    expect(await screen.findByText(snapshotDetail.name)).toBeInTheDocument();
+    expect(screen.getByText(snapshotDetail.payments[0].reference_id)).toBeInTheDocument();
+  });
+
+  // Regression: a deployment with no /api/* route configured at all (e.g. a static host with no
+  // backend rewrite) returns ITS OWN 404 for every request — indistinguishable, from here, from
+  // the real backend 404ing because a specific id doesn't exist. Both must fall back to the
+  // snapshot for a real snapshot id; only an id absent from the snapshot too should 404 out.
+  it('renders the captured fallback snapshot even when the failure is an HTTP 404 (e.g. no /api route at all)', async () => {
+    server.use(
+      http.get('*/programmes/:programmeId', () => new HttpResponse(null, { status: 404 })),
     );
     const [snapshotId, snapshotDetail] = Object.entries(FALLBACK_SNAPSHOT.programmeDetails)[0];
 

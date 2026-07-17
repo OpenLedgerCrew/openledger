@@ -39,10 +39,13 @@ export async function fetchProgrammeDetail(
 ): Promise<ProgrammeDetailResponse | null> {
   try {
     const res = await fetch(`/api/programmes/${programmeId}?page=${page}`);
-    if (res.status === 404) return null;
     if (!res.ok) throw new Error(`Failed to load programme (${res.status})`);
     return await res.json();
   } catch {
+    // Covers both "the real backend 404'd for an unknown id" and "there's no backend/API route
+    // reachable at all" (e.g. no /api/* configured on this deployment) — both look identical
+    // from here (a non-OK response), so both fall back to the snapshot. Only genuinely resolves
+    // to null when this id isn't in the fallback data either.
     return FALLBACK_SNAPSHOT.programmeDetails[programmeId] ?? null;
   }
 }
