@@ -6,7 +6,8 @@ import { DonateForm } from "../components/donation/DonateForm";
 import { DonationHistory } from "../components/donation/DonationHistory";
 import { fetchStats, fetchDonations } from "../components/donation/lib/contract";
 import type { WalletState, ContractStats, DonationRecord } from "../components/donation/lib/types";
-
+import { CheckCircle2 } from "lucide-react";
+import { Button } from "../components/ui/button";
 const DEFAULT_WALLET: WalletState = { connected: false, publicKey: null, network: null };
 
 export function About() {
@@ -129,24 +130,14 @@ export function About() {
                   Your support enables us to expand transparency tools to more programs and communities.
                   Donate on-chain to directly fund cash transfer systems.
                 </p>
-                <button
+
+                 <Button
                   onClick={() => setShowDonateModal(true)}
-                  style={{
-                    backgroundColor: "#5da76e",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: "12px",
-                    padding: "12px 28px",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    boxShadow: "0 4px 14px rgba(93, 167, 110, 0.4)",
-                    transition: "transform 0.2s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                  size="lg"
+                  className="flex items-center gap-2 mx-auto"
                 >
-                  Donate to Sapcone
+                  <CheckCircle2 size={18} />
+                  Donate to SAPCONE
                 </Button>
               </div>
             </div>
