@@ -6,6 +6,14 @@ import type { RawPaymentRecord } from '../types/payment';
 
 const PAGE_SIZE = 25;
 
+/** The cached per-programme view: the read model plus the programme's own name/status, so a
+ * direct link to /programmes/:id (no list-page navigation state to draw from) can still show
+ * a real name and status badge instead of falling back to the bare id. */
+interface CachedProgrammeView extends ProgrammeReadModel {
+  name: string;
+  status: string;
+}
+
 /**
  * Section 6.1 — the public programme view. Serves the aggregates (section 5.4), the section
  * 4.5 disclosure, and the paginated payment table in one response, with no login (O-5:
@@ -28,17 +36,19 @@ export function programmeRoutes(app: AppInstance): Router {
     const { forkClient, explorerBaseUrl } = app.deps;
 
     const cacheKey = `readmodel:${programmeId}`;
-    let readModel = app.cache.get(cacheKey) as ProgrammeReadModel | undefined;
+    let readModel = app.cache.get(cacheKey) as CachedProgrammeView | undefined;
     if (!readModel) {
-      const [payments, deliveries] = await Promise.all([
+      const [programme, payments, deliveries] = await Promise.all([
+        forkClient.getProgramme(programmeId),
         forkClient.getPayments(programmeId),
         forkClient.getDeliveries(programmeId),
       ]);
-      readModel = buildProgrammeReadModel(
+      const built = buildProgrammeReadModel(
         payments as unknown as RawPaymentRecord[],
         deliveries,
         explorerBaseUrl,
       );
+      readModel = { ...built, name: programme.name, status: programme.status };
       // 60s TTL: cheap to recompute and slight staleness is harmless (section 5.5).
       app.cache.set(cacheKey, readModel, 'programme_aggregate');
     }
@@ -50,6 +60,8 @@ export function programmeRoutes(app: AppInstance): Router {
 
     res.json({
       programme_id: programmeId,
+      name: readModel.name,
+      status: readModel.status,
       aggregates: readModel.aggregates,
       disclosure: DISCLOSURE_FULL,
       payments: readModel.views.slice(start, start + PAGE_SIZE),
