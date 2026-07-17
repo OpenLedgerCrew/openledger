@@ -178,8 +178,41 @@ html.high-contrast body :not(svg):not(path) {
   border-color: var(--foreground) !important;
 }
 
-html.high-contrast a,
-html.high-contrast button {
+/* Buttons in high contrast mode need special handling */
+html.high-contrast button,
+html.high-contrast a[role="button"],
+html.high-contrast .inline-flex {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border: 2px solid var(--foreground) !important;
+}
+
+/* Primary buttons - ensure they have visible background and text */
+html.high-contrast .bg-primary,
+html.high-contrast button[class*="bg-primary"] {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border: 2px solid var(--primary-foreground) !important;
+}
+
+/* Outline buttons - ensure border and text are visible */
+html.high-contrast .border-primary,
+html.high-contrast button[class*="border-primary"] {
+  background-color: transparent !important;
+  color: var(--primary) !important;
+  border: 2px solid var(--primary) !important;
+}
+
+/* Secondary/ghost buttons */
+html.high-contrast .bg-secondary,
+html.high-contrast button[class*="bg-secondary"] {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border: 2px solid var(--foreground) !important;
+}
+
+/* Links in high contrast */
+html.high-contrast a {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -342,3 +375,13 @@ select.appearance-none {
   }
 }
 
+
+
+/* ── Additional Mobile Responsive Styles ─────────────────────────────────── */
+
+@media (max-width: 767px) {
+  /* ── How It Works cards — single column on mobile ── */
+  [class*="grid-cols-1"][class*="sm:grid-cols-2"][class*="lg:grid-cols-3"] {
+    grid-template-columns: 1fr !important;
+  }
+}

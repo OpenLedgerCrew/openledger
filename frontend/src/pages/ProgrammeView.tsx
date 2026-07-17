@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search } from "lucide-react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { Search, ArrowRight } from "lucide-react";
 import { fetchProgrammes } from "../api/programmes";
 import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
+import { Button } from "../components/ui/button";
 import type { Programme } from "../types";
 
 const STATUS_FILTER_OPTIONS = ["DRAFT", "READY", "STARTED", "PAUSED", "COMPLETED"];
@@ -134,25 +135,15 @@ export const ProgrammeView: React.FC = () => {
 
                   {/* Card action — View button right-aligned */}
                   <div className="mt-auto flex justify-end">
-                    <button
-                      onClick={() => navigate(`/programmes/${programme.id}`)}
-                      aria-label={`View ${programme.name}`}
-                      className="rounded-full px-5 py-2 text-sm font-semibold transition-colors duration-200 min-h-[44px]"
-                      style={{
-                        backgroundColor: "var(--primary)",
-                        color: "var(--primary-foreground)",
-                        border: "none",
-                        cursor: "pointer",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.opacity = "0.85";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                      }}
+                    <Button
+                      asChild
+                      size="sm"
                     >
-                      View →
-                    </button>
+                      <Link to={`/programmes/${programme.id}`}>
+                        View
+                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               );

@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { Menu, X, MessageSquare } from "lucide-react";
 import { Logo } from "./ui/Logo";
 import { cn } from "./lib/utils";
+import { Button } from "./ui/button";
 import { DonateModal } from "./DonateModal";
 import { useChatContext } from "../contexts/ChatContext";
 
@@ -35,7 +36,7 @@ export function Header() {
                 end={item.to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "rounded-full px-4 py-2 text-sm transition-colors duration-200 flex items-center min-h-[44px]",
+                    "rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 flex items-center min-h-[44px]",
                     isActive
                       ? "font-semibold bg-primary/15 text-primary"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent",
@@ -51,41 +52,45 @@ export function Header() {
           <div className="ml-auto flex items-center gap-2">
 
             {/* Donate — desktop only */}
-            <button
+            <Button
+              variant="default"
+              size="sm"
               onClick={() => setDonateOpen(true)}
-              className="hidden md:inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 min-h-[44px]"
+              className="hidden md:inline-flex"
             >
               Donate to Sapcone
-            </button>
+            </Button>
 
             {/* Assistant toggle — desktop only */}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={toggleChat}
               aria-label={chatOpen ? "Close assistant chat" : "Open assistant chat"}
               aria-expanded={chatOpen}
               className={cn(
-                "hidden md:flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors duration-200 min-h-[44px]",
-                chatOpen
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                "hidden md:inline-flex",
+                chatOpen && "bg-primary/15 text-primary"
               )}
             >
               <MessageSquare size={16} aria-hidden="true" />
               <span>Assistant</span>
-            </button>
+            </Button>
 
             {/* Hamburger — mobile only (md and below) */}
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileNavOpen((o) => !o)}
               aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
               aria-expanded={mobileNavOpen}
-              className="flex md:hidden items-center justify-center rounded-full p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors duration-200 min-h-[44px] min-w-[44px]"
+              className="flex md:hidden"
             >
               {mobileNavOpen
                 ? <X size={22} aria-hidden="true" />
                 : <Menu size={22} aria-hidden="true" />
               }
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -104,7 +109,7 @@ export function Header() {
                   onClick={() => setMobileNavOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      "rounded-lg px-4 py-3 text-sm transition-colors duration-200 min-h-[44px] flex items-center",
+                      "rounded-lg px-4 py-3 text-sm font-medium transition-colors duration-200 min-h-[44px] flex items-center",
                       isActive
                         ? "font-semibold bg-primary/15 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -117,20 +122,24 @@ export function Header() {
 
               <div className="my-1 border-t border-border" />
 
-              <button
+              <Button
+                variant="default"
+                size="sm"
+                className="w-full justify-center"
                 onClick={() => { setMobileNavOpen(false); setDonateOpen(true); }}
-                className="rounded-lg px-4 py-3 text-sm font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition-colors duration-200 min-h-[44px] flex items-center"
               >
                 Donate to Sapcone
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-center"
                 onClick={() => { setMobileNavOpen(false); toggleChat(); }}
-                className="rounded-lg px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200 min-h-[44px] flex items-center gap-2"
               >
-                <MessageSquare size={15} aria-hidden="true" />
+                <MessageSquare size={16} aria-hidden="true" />
                 Assistant
-              </button>
+              </Button>
             </div>
           </nav>
         )}

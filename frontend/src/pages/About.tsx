@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { PageShell, Container, Section } from "../components/ui/PageShell";
+import { Button } from "../components/ui/button";
 import { DonateModal } from "../components/DonateModal";
 
 export function About() {
@@ -95,26 +96,12 @@ export function About() {
                   Your support enables us to expand transparency tools to more programs and communities.
                   Donate on-chain to directly fund cash transfer systems.
                 </p>
-                <button
+                <Button
                   onClick={() => setDonateOpen(true)}
-                  style={{
-                    backgroundColor: "var(--primary)",
-                    color: "var(--primary-foreground)",
-                    border: "none",
-                    borderRadius: 12,
-                    padding: "12px 28px",
-                    fontSize: 15,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    boxShadow: "0 4px 14px color-mix(in oklch, var(--primary) 40%, transparent)",
-                    transition: "opacity 0.2s",
-                    minHeight: 44,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  size="lg"
                 >
                   Donate to Sapcone
-                </button>
+                </Button>
               </div>
             </div>
           </Container>

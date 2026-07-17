@@ -1,5 +1,6 @@
 import React from "react";
 import { Mail } from "lucide-react";
+import { Button } from "./ui/button";
 import type { ProgrammeAggregates } from "../types";
 
 export interface EmailReportButtonProps {
@@ -35,35 +36,15 @@ export function EmailReportButton({ programmeId, programmeName, aggregates, clas
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={handleClick}
       className={className}
       aria-label={`Email report for ${programmeName}`}
-      style={{
-        padding: "8px 16px",
-        borderRadius: 10,
-        border: "1.5px solid var(--success)",
-        backgroundColor: "transparent",
-        color: "var(--success)",
-        fontSize: 12,
-        fontWeight: 700,
-        cursor: "pointer",
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        transition: "background 0.15s, color 0.15s",
-        minHeight: 44,
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "var(--success)";
-        (e.currentTarget as HTMLButtonElement).style.color = "var(--success-foreground)";
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
-        (e.currentTarget as HTMLButtonElement).style.color = "var(--success)";
-      }}
     >
-      <Mail size={13} aria-hidden="true" /> Email Report
-    </button>
+      <Mail size={16} aria-hidden="true" />
+      Email Report
+    </Button>
   );
 }
