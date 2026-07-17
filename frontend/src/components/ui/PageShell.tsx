@@ -5,14 +5,13 @@ import { Footer } from "../Footer";
 
 interface PageShellProps {
   children: ReactNode;
-  showSearch?: boolean;
   className?: string;
 }
 
-export function PageShell({ children, showSearch, className }: PageShellProps) {
+export function PageShell({ children, className }: PageShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header showSearch={showSearch} />
+      <Header />
       <main className={cn("flex-1", className)}>{children}</main>
       <Footer />
     </div>

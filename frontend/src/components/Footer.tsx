@@ -12,9 +12,9 @@ const COLS = [
   {
     heading: "Legal",
     links: [
-      { to: "/", label: "Privacy" },
-      { to: "/", label: "Terms" },
-      { to: "/", label: "Audit" },
+      { to: "/privacy", label: "Privacy" },
+      { to: "/terms", label: "Terms" },
+      { to: "/audit", label: "Audit" },
     ],
   },
 ] as const;
