@@ -1,29 +1,44 @@
-import React, { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PageShell, Container, Section } from "../components/ui/PageShell";
-import { Button } from "../components/ui/button";
+import { WalletConnect } from "../components/donation/WalletConnect";
+import { Stats } from "../components/donation/Stats";
+import { DonateForm } from "../components/donation/DonateForm";
+import { DonationHistory } from "../components/donation/DonationHistory";
+import { fetchStats, fetchDonations } from "../components/donation/lib/contract";
+import type { WalletState, ContractStats, DonationRecord } from "../components/donation/lib/types";
+
+const DEFAULT_WALLET: WalletState = { connected: false, publicKey: null, network: null };
 
 export function About() {
   const [showDonateModal, setShowDonateModal] = useState(false);
-  const [donateStep, setDonateStep] = useState(1); // 1: Select details, 2: Send payment, 3: Success
-  const [asset, setAsset] = useState("USDC");
-  const [amount, setAmount] = useState("100");
-  const [txHash, setTxHash] = useState("");
+  const [wallet, setWallet] = useState<WalletState>(DEFAULT_WALLET);
+  const [stats, setStats] = useState<ContractStats | null>(null);
+  const [donations, setDonations] = useState<DonationRecord[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const handleDonateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setDonateStep(2);
-  };
-
-  const handleConfirmSent = () => {
-    // Generate a mock Stellar tx hash
-    const chars = "0123456789abcdef";
-    let hash = "";
-    for (let i = 0; i < 64; i++) {
-      hash += chars[Math.floor(Math.random() * 16)];
+  const loadDonationData = useCallback(async () => {
+    setStatsLoading(true);
+    setHistoryLoading(true);
+    setLoadError(null);
+    try {
+      const [s, d] = await Promise.all([fetchStats(), fetchDonations()]);
+      setStats(s);
+      setDonations(d);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "Failed to load contract data");
+    } finally {
+      setStatsLoading(false);
+      setHistoryLoading(false);
     }
-    setTxHash(hash);
-    setDonateStep(3);
-  };
+  }, []);
+
+  // Public, anonymous contract reads only — no wallet touched. Fires when the donate modal
+  // opens (not on page mount) so a plain visit to /about never makes an RPC call.
+  useEffect(() => {
+    if (showDonateModal) loadDonationData();
+  }, [showDonateModal, loadDonationData]);
 
   return (
     <PageShell>
@@ -118,10 +133,7 @@ export function About() {
                   Your support enables us to expand transparency tools to more programs and communities. Donate on-chain to directly fund cash transfer systems.
                 </p>
                 <button
-                  onClick={() => {
-                    setShowDonateModal(true);
-                    setDonateStep(1);
-                  }}
+                  onClick={() => setShowDonateModal(true)}
                   style={{
                     backgroundColor: "#5da76e",
                     color: "#ffffff",
@@ -168,7 +180,9 @@ export function About() {
               backgroundColor: "#ffffff",
               borderRadius: "24px",
               width: "100%",
-              maxWidth: "480px",
+              maxWidth: "640px",
+              maxHeight: "90vh",
+              overflowY: "auto",
               padding: "32px",
               boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
               position: "relative",
@@ -197,217 +211,62 @@ export function About() {
               ✕
             </button>
 
-            {donateStep === 1 && (
-              <form onSubmit={handleDonateSubmit}>
-                <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "24px", fontWeight: 700, marginBottom: "16px" }}>
-                  Select Donation Amount
-                </h3>
-                <div style={{ marginBottom: "20px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#6b7280", marginBottom: "8px" }}>
-                    Select Asset
-                  </label>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    {["USDC", "XLM", "KES"].map((cur) => (
-                      <button
-                        type="button"
-                        key={cur}
-                        onClick={() => setAsset(cur)}
-                        style={{
-                          flex: 1,
-                          padding: "10px",
-                          borderRadius: "10px",
-                          border: asset === cur ? "2px solid #5da76e" : "1px solid #d1d5db",
-                          backgroundColor: asset === cur ? "#5da76e14" : "#ffffff",
-                          color: asset === cur ? "#5da76e" : "#374151",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                        }}
-                      >
-                        {cur}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "24px", fontWeight: 700, marginBottom: "6px" }}>
+              Donate to OpenLedger
+            </h3>
+            <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "20px" }}>
+              Donations settle on-chain via a Stellar Soroban smart contract — connect a wallet
+              to send XLM directly, no intermediary.
+            </p>
 
-                <div style={{ marginBottom: "24px" }}>
-                  <label style={{ display: "block", fontSize: "13px", fontWeight: 600, color: "#6b7280", marginBottom: "8px" }}>
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "16px",
-                      fontWeight: 600,
-                      outline: "none",
-                    }}
-                  />
-                </div>
+            <WalletConnect
+              wallet={wallet}
+              onConnect={setWallet}
+              onDisconnect={() => setWallet(DEFAULT_WALLET)}
+            />
 
+            <Stats stats={stats} loading={statsLoading} />
+
+            {loadError && (
+              <div
+                style={{
+                  backgroundColor: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  borderRadius: "10px",
+                  padding: "12px 14px",
+                  marginBottom: "20px",
+                  fontSize: "13px",
+                  color: "#b91c1c",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                }}
+                role="alert"
+              >
+                <span>Could not reach contract: {loadError}</span>
                 <button
-                  type="submit"
+                  onClick={loadDonationData}
                   style={{
-                    width: "100%",
-                    backgroundColor: "#5da76e",
-                    color: "#ffffff",
-                    padding: "14px",
-                    borderRadius: "12px",
-                    border: "none",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  Continue
-                </button>
-              </form>
-            )}
-
-            {donateStep === 2 && (
-              <div style={{ textAlign: "center" }}>
-                <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "22px", fontWeight: 700, marginBottom: "12px" }}>
-                  Send Donation
-                </h3>
-                <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "20px" }}>
-                  Please send exactly <strong>{amount} {asset}</strong> to the Stellar address below.
-                </p>
-
-                {/* QR Code Placeholder */}
-                <div
-                  style={{
-                    width: "160px",
-                    height: "160px",
-                    backgroundColor: "#f5f5f5",
-                    margin: "0 auto 20px",
-                    border: "1px solid #eee",
-                    borderRadius: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    position: "relative",
-                  }}
-                >
-                  <div style={{ width: "120px", height: "120px", border: "4px solid #1a1714", position: "relative" }}>
-                    <div style={{ position: "absolute", top: 10, left: 10, right: 10, bottom: 10, background: "#5da76e" }}></div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    backgroundColor: "#fcf5ec",
-                    padding: "12px",
-                    borderRadius: "10px",
+                    backgroundColor: "#ffffff",
+                    border: "1px solid #fecaca",
+                    borderRadius: "8px",
+                    padding: "6px 12px",
                     fontSize: "12px",
-                    fontFamily: "monospace",
-                    wordBreak: "break-all",
-                    border: "1px solid #e5e0d8",
-                    color: "#1a1714",
-                    marginBottom: "24px",
-                  }}
-                >
-                  GBXTLP...DONATE...SAPCONE...KEY
-                </div>
-
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText("GBXTLPDONATESAPCONEKEY");
-                      alert("Address copied!");
-                    }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#ffffff",
-                      border: "1px solid #d1d5db",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    Copy Address
-                  </button>
-                  <button
-                    onClick={handleConfirmSent}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "#5da76e",
-                      color: "#ffffff",
-                      border: "none",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      fontWeight: 700,
-                      cursor: "pointer",
-                    }}
-                  >
-                    I Have Sent Funds
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {donateStep === 3 && (
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    width: "64px",
-                    height: "64px",
-                    borderRadius: "50%",
-                    backgroundColor: "#5da76e1a",
-                    color: "#5da76e",
-                    fontSize: "32px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    margin: "0 auto 20px",
-                  }}
-                >
-                  ✓
-                </div>
-                <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "22px", fontWeight: 700, marginBottom: "12px" }}>
-                  Thank You!
-                </h3>
-                <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "20px" }}>
-                  Your donation of <strong>{amount} {asset}</strong> has been received and verified.
-                </p>
-
-                <div
-                  style={{
-                    backgroundColor: "#f5f5f5",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    textAlign: "left",
-                    marginBottom: "24px",
-                  }}
-                >
-                  <div style={{ fontSize: "11px", fontWeight: 600, color: "#6b7280" }}>TRANSACTION HASH</div>
-                  <div style={{ fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all", marginTop: "4px" }}>
-                    {txHash}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setShowDonateModal(false)}
-                  style={{
-                    width: "100%",
-                    backgroundColor: "#1a1714",
-                    color: "#ffffff",
-                    padding: "12px",
-                    borderRadius: "10px",
-                    border: "none",
                     fontWeight: 700,
+                    color: "#b91c1c",
                     cursor: "pointer",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  Close
+                  Retry
                 </button>
               </div>
             )}
+
+            <DonateForm wallet={wallet} onSuccess={loadDonationData} />
+
+            <DonationHistory donations={donations} loading={historyLoading} />
           </div>
         </div>
       )}
@@ -416,6 +275,10 @@ export function About() {
         @keyframes fadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
         }
       `}</style>
     </PageShell>
