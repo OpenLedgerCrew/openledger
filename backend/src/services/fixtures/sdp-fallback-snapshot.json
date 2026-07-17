@@ -1,0 +1,660 @@
+{
+  "disbursements": [
+    {
+      "id": "f4e9aa3d-ed41-490d-9f71-f64f66ba49aa",
+      "name": "Demo Disbursement — 2026-07-16",
+      "wallet": {
+        "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+        "name": "Demo Wallet",
+        "homepage": "https://demo-wallet.stellar.org",
+        "sep_10_client_domain": "demo-wallet-server.stellar.org",
+        "deep_link_schema": "https://demo-wallet.stellar.org",
+        "enabled": true,
+        "created_at": "2026-07-14T08:38:01.531053Z",
+        "updated_at": "2026-07-16T21:43:57.965371Z"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "created_at": "2026-07-14T08:38:01.526861Z",
+        "updated_at": "2026-07-14T08:38:01.526861Z",
+        "deleted_at": null
+      },
+      "status": "STARTED",
+      "verification_field": "DATE_OF_BIRTH",
+      "status_history": [
+        {
+          "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+          "status": "DRAFT",
+          "timestamp": "2026-07-16T14:59:24.906943677Z"
+        },
+        {
+          "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+          "status": "READY",
+          "timestamp": "2026-07-16T14:59:24.904411Z"
+        },
+        {
+          "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+          "status": "STARTED",
+          "timestamp": "2026-07-16T14:59:24.952505Z"
+        }
+      ],
+      "receiver_registration_message_template": "",
+      "file_name": "seed-disbursement-XXXX.csv",
+      "created_at": "2026-07-16T14:59:24.904411Z",
+      "updated_at": "2026-07-16T14:59:24.952505Z",
+      "registration_contact_type": "PHONE_NUMBER",
+      "total_payments": 3,
+      "total_payments_sent": 0,
+      "total_payments_failed": 0,
+      "total_payments_canceled": 0,
+      "total_payments_remaining": 3,
+      "amount_disbursed": "0.00",
+      "total_amount": "450.00",
+      "average_amount": "150.00",
+      "created_by": {
+        "id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+        "first_name": "Default",
+        "last_name": "Owner"
+      },
+      "started_by": {
+        "id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+        "first_name": "Default",
+        "last_name": "Owner"
+      }
+    },
+    {
+      "id": "e2f93ffa-48db-41ca-bae4-e8788bfb05ad",
+      "name": "Turkana North MPCA — Cycle 1",
+      "wallet": {
+        "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+        "name": "Demo Wallet",
+        "homepage": "https://demo-wallet.stellar.org",
+        "sep_10_client_domain": "demo-wallet-server.stellar.org",
+        "deep_link_schema": "https://demo-wallet.stellar.org",
+        "enabled": true,
+        "created_at": "2026-07-14T08:38:01.531053Z",
+        "updated_at": "2026-07-16T21:43:57.965371Z"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "created_at": "2026-07-14T08:38:01.526861Z",
+        "updated_at": "2026-07-14T08:38:01.526861Z",
+        "deleted_at": null
+      },
+      "status": "STARTED",
+      "verification_field": "DATE_OF_BIRTH",
+      "status_history": [
+        {
+          "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+          "status": "DRAFT",
+          "timestamp": "2026-07-14T09:05:00.397673507Z"
+        },
+        {
+          "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+          "status": "READY",
+          "timestamp": "2026-07-14T09:05:00.395755Z"
+        },
+        {
+          "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+          "status": "STARTED",
+          "timestamp": "2026-07-14T09:05:00.429514Z"
+        }
+      ],
+      "receiver_registration_message_template": "",
+      "file_name": "UPDATED_DISBURSEMENT_TEMPLATE_PHONE_NUMBER_DATE_OF_BIRTH_CSV.csv",
+      "created_at": "2026-07-14T09:05:00.395755Z",
+      "updated_at": "2026-07-14T09:05:00.429514Z",
+      "registration_contact_type": "PHONE_NUMBER",
+      "total_payments": 3,
+      "total_payments_sent": 1,
+      "total_payments_failed": 0,
+      "total_payments_canceled": 0,
+      "total_payments_remaining": 2,
+      "amount_disbursed": "520.00",
+      "total_amount": "1560.00",
+      "average_amount": "520.00",
+      "created_by": {
+        "id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+        "first_name": "Default",
+        "last_name": "Owner"
+      },
+      "started_by": {
+        "id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+        "first_name": "Default",
+        "last_name": "Owner"
+      }
+    }
+  ],
+  "payments": [
+    {
+      "id": "82f53fe8-168c-49a8-8653-63b1318561a2",
+      "amount": "150.0000000",
+      "stellar_transaction_id": "",
+      "stellar_operation_id": "",
+      "status": "READY",
+      "status_history": [
+        {
+          "status": "DRAFT",
+          "status_message": "",
+          "timestamp": "2026-07-16T14:59:24.904411Z"
+        },
+        {
+          "status": "READY",
+          "status_message": "",
+          "timestamp": "2026-07-16T14:59:24.952505Z"
+        }
+      ],
+      "type": "DISBURSEMENT",
+      "disbursement": {
+        "id": "f4e9aa3d-ed41-490d-9f71-f64f66ba49aa",
+        "name": "Demo Disbursement — 2026-07-16",
+        "status": "STARTED",
+        "verification_field": "DATE_OF_BIRTH",
+        "status_history": [
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "DRAFT",
+            "timestamp": "2026-07-16T14:59:24.906943677Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "READY",
+            "timestamp": "2026-07-16T14:59:24.904411Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "STARTED",
+            "timestamp": "2026-07-16T14:59:24.952505Z"
+          }
+        ],
+        "receiver_registration_message_template": "",
+        "file_name": "seed-disbursement-XXXX.csv",
+        "created_at": "2026-07-16T14:59:24.904411Z",
+        "updated_at": "2026-07-16T14:59:24.952505Z",
+        "registration_contact_type": "PHONE_NUMBER"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "deleted_at": null
+      },
+      "receiver_wallet": {
+        "id": "422303eb-4bd7-45d5-8a29-b77cee8b1c5b",
+        "receiver": {
+          "id": "6a5b36dc-2722-4287-a02c-829d28e57e9d"
+        },
+        "wallet": {
+          "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+          "name": "Demo Wallet",
+          "homepage": "https://demo-wallet.stellar.org",
+          "sep_10_client_domain": "demo-wallet-server.stellar.org",
+          "deep_link_schema": "https://demo-wallet.stellar.org",
+          "enabled": true
+        },
+        "status": "READY",
+        "status_history": [
+          {
+            "status": "DRAFT",
+            "timestamp": "2026-07-16T14:59:24.904411Z"
+          },
+          {
+            "status": "READY",
+            "timestamp": "2026-07-16T14:59:24.952505Z"
+          }
+        ],
+        "created_at": "2026-07-16T14:59:24.904411Z",
+        "updated_at": "2026-07-16T14:59:26.138033Z",
+        "invitation_sent_at": "2026-07-16T14:59:26.138033Z"
+      },
+      "created_at": "2026-07-16T14:59:24.904411Z",
+      "updated_at": "2026-07-16T14:59:24.952505Z"
+    },
+    {
+      "id": "dcf35d7f-7e99-4795-b084-24076470270a",
+      "amount": "150.0000000",
+      "stellar_transaction_id": "",
+      "stellar_operation_id": "",
+      "status": "READY",
+      "status_history": [
+        {
+          "status": "DRAFT",
+          "status_message": "",
+          "timestamp": "2026-07-16T14:59:24.904411Z"
+        },
+        {
+          "status": "READY",
+          "status_message": "",
+          "timestamp": "2026-07-16T14:59:24.952505Z"
+        }
+      ],
+      "type": "DISBURSEMENT",
+      "disbursement": {
+        "id": "f4e9aa3d-ed41-490d-9f71-f64f66ba49aa",
+        "name": "Demo Disbursement — 2026-07-16",
+        "status": "STARTED",
+        "verification_field": "DATE_OF_BIRTH",
+        "status_history": [
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "DRAFT",
+            "timestamp": "2026-07-16T14:59:24.906943677Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "READY",
+            "timestamp": "2026-07-16T14:59:24.904411Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "STARTED",
+            "timestamp": "2026-07-16T14:59:24.952505Z"
+          }
+        ],
+        "receiver_registration_message_template": "",
+        "file_name": "seed-disbursement-XXXX.csv",
+        "created_at": "2026-07-16T14:59:24.904411Z",
+        "updated_at": "2026-07-16T14:59:24.952505Z",
+        "registration_contact_type": "PHONE_NUMBER"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "deleted_at": null
+      },
+      "receiver_wallet": {
+        "id": "0eedf455-2680-468d-8211-6065e12c9078",
+        "receiver": {
+          "id": "7c73be03-17d9-418d-8bf7-fec21b7aa015"
+        },
+        "wallet": {
+          "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+          "name": "Demo Wallet",
+          "homepage": "https://demo-wallet.stellar.org",
+          "sep_10_client_domain": "demo-wallet-server.stellar.org",
+          "deep_link_schema": "https://demo-wallet.stellar.org",
+          "enabled": true
+        },
+        "status": "READY",
+        "status_history": [
+          {
+            "status": "DRAFT",
+            "timestamp": "2026-07-16T14:59:24.904411Z"
+          },
+          {
+            "status": "READY",
+            "timestamp": "2026-07-16T14:59:24.952505Z"
+          }
+        ],
+        "created_at": "2026-07-16T14:59:24.904411Z",
+        "updated_at": "2026-07-16T14:59:26.138033Z",
+        "invitation_sent_at": "2026-07-16T14:59:26.138033Z"
+      },
+      "created_at": "2026-07-16T14:59:24.904411Z",
+      "updated_at": "2026-07-16T14:59:24.952505Z"
+    },
+    {
+      "id": "7ebdd8d9-683c-44ec-8fe6-6dcc0a8e9d70",
+      "amount": "150.0000000",
+      "stellar_transaction_id": "",
+      "stellar_operation_id": "",
+      "status": "READY",
+      "status_history": [
+        {
+          "status": "DRAFT",
+          "status_message": "",
+          "timestamp": "2026-07-16T14:59:24.904411Z"
+        },
+        {
+          "status": "READY",
+          "status_message": "",
+          "timestamp": "2026-07-16T14:59:24.952505Z"
+        }
+      ],
+      "type": "DISBURSEMENT",
+      "disbursement": {
+        "id": "f4e9aa3d-ed41-490d-9f71-f64f66ba49aa",
+        "name": "Demo Disbursement — 2026-07-16",
+        "status": "STARTED",
+        "verification_field": "DATE_OF_BIRTH",
+        "status_history": [
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "DRAFT",
+            "timestamp": "2026-07-16T14:59:24.906943677Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "READY",
+            "timestamp": "2026-07-16T14:59:24.904411Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "STARTED",
+            "timestamp": "2026-07-16T14:59:24.952505Z"
+          }
+        ],
+        "receiver_registration_message_template": "",
+        "file_name": "seed-disbursement-XXXX.csv",
+        "created_at": "2026-07-16T14:59:24.904411Z",
+        "updated_at": "2026-07-16T14:59:24.952505Z",
+        "registration_contact_type": "PHONE_NUMBER"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "deleted_at": null
+      },
+      "receiver_wallet": {
+        "id": "11b2c2b7-5a6f-4572-a60f-b14df7e3a169",
+        "receiver": {
+          "id": "8fc5a98a-c816-4e67-9d20-0ae129b91749"
+        },
+        "wallet": {
+          "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+          "name": "Demo Wallet",
+          "homepage": "https://demo-wallet.stellar.org",
+          "sep_10_client_domain": "demo-wallet-server.stellar.org",
+          "deep_link_schema": "https://demo-wallet.stellar.org",
+          "enabled": true
+        },
+        "status": "READY",
+        "status_history": [
+          {
+            "status": "DRAFT",
+            "timestamp": "2026-07-16T14:59:24.904411Z"
+          },
+          {
+            "status": "READY",
+            "timestamp": "2026-07-16T14:59:24.952505Z"
+          }
+        ],
+        "created_at": "2026-07-16T14:59:24.904411Z",
+        "updated_at": "2026-07-16T14:59:26.138033Z",
+        "invitation_sent_at": "2026-07-16T14:59:26.138033Z"
+      },
+      "created_at": "2026-07-16T14:59:24.904411Z",
+      "updated_at": "2026-07-16T14:59:24.952505Z"
+    },
+    {
+      "id": "f82bea2f-ff76-4584-af95-396a126aaeb9",
+      "amount": "520.0000000",
+      "stellar_transaction_id": "eea77d405e60a3b084cadd8d8f0f7b313eaa18e2f1f5058d1588ad0cba658bec",
+      "stellar_operation_id": "",
+      "status": "SUCCESS",
+      "status_history": [
+        {
+          "status": "DRAFT",
+          "status_message": "",
+          "timestamp": "2026-07-14T09:05:00.395755Z"
+        },
+        {
+          "status": "READY",
+          "status_message": "",
+          "timestamp": "2026-07-14T09:05:00.429514Z"
+        },
+        {
+          "status": "PENDING",
+          "status_message": "",
+          "timestamp": "2026-07-14T10:24:18.828566Z"
+        },
+        {
+          "status": "SUCCESS",
+          "status_message": "",
+          "timestamp": "2026-07-14T10:24:28.833795Z"
+        }
+      ],
+      "type": "DISBURSEMENT",
+      "disbursement": {
+        "id": "e2f93ffa-48db-41ca-bae4-e8788bfb05ad",
+        "name": "Turkana North MPCA — Cycle 1",
+        "status": "STARTED",
+        "verification_field": "DATE_OF_BIRTH",
+        "status_history": [
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "DRAFT",
+            "timestamp": "2026-07-14T09:05:00.397673507Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "READY",
+            "timestamp": "2026-07-14T09:05:00.395755Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "STARTED",
+            "timestamp": "2026-07-14T09:05:00.429514Z"
+          }
+        ],
+        "receiver_registration_message_template": "",
+        "file_name": "UPDATED_DISBURSEMENT_TEMPLATE_PHONE_NUMBER_DATE_OF_BIRTH_CSV.csv",
+        "created_at": "2026-07-14T09:05:00.395755Z",
+        "updated_at": "2026-07-14T09:05:00.429514Z",
+        "registration_contact_type": "PHONE_NUMBER"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "deleted_at": null
+      },
+      "receiver_wallet": {
+        "id": "0b70abe8-035f-404f-a76d-00daf2aea071",
+        "receiver": {
+          "id": "358a9bc4-8f6d-4b28-9547-10b3c67fd482"
+        },
+        "wallet": {
+          "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+          "name": "Demo Wallet",
+          "homepage": "https://demo-wallet.stellar.org",
+          "sep_10_client_domain": "demo-wallet-server.stellar.org",
+          "deep_link_schema": "https://demo-wallet.stellar.org",
+          "enabled": true
+        },
+        "stellar_address": "GBVVYZBWMLUYSBGXFH64EEAMWZL3TBB3KXGEJGDL65DUPXD5X4C65XPJ",
+        "status": "REGISTERED",
+        "status_history": [
+          {
+            "status": "REGISTERED",
+            "timestamp": "2026-07-14T10:24:14.518522Z"
+          },
+          {
+            "status": "DRAFT",
+            "timestamp": "2026-07-14T09:05:00.395755Z"
+          },
+          {
+            "status": "READY",
+            "timestamp": "2026-07-14T09:05:00.429514Z"
+          }
+        ],
+        "created_at": "2026-07-14T09:05:00.395755Z",
+        "updated_at": "2026-07-14T10:24:14.518522Z",
+        "otp_confirmed_at": "2026-07-14T10:24:14.523829Z",
+        "otp_confirmed_with": "+254111942081",
+        "sep24_transaction_id": "893db334-9871-48e5-81df-def4446a8712",
+        "invitation_sent_at": "2026-07-14T09:05:08.078079Z"
+      },
+      "created_at": "2026-07-14T09:05:00.395755Z",
+      "updated_at": "2026-07-14T10:24:28.833795Z",
+      "external_payment_id": "PAY_02",
+      "sender_address": "GBAUBXMFWVD7SF54KWXK77MI6TR5ZZCLLMVQ3YAVPGFMO7CXR36QN734"
+    },
+    {
+      "id": "0f62a65e-fed7-49d4-ac0a-7046dbbae144",
+      "amount": "520.0000000",
+      "stellar_transaction_id": "",
+      "stellar_operation_id": "",
+      "status": "READY",
+      "status_history": [
+        {
+          "status": "DRAFT",
+          "status_message": "",
+          "timestamp": "2026-07-14T09:05:00.395755Z"
+        },
+        {
+          "status": "READY",
+          "status_message": "",
+          "timestamp": "2026-07-14T09:05:00.429514Z"
+        }
+      ],
+      "type": "DISBURSEMENT",
+      "disbursement": {
+        "id": "e2f93ffa-48db-41ca-bae4-e8788bfb05ad",
+        "name": "Turkana North MPCA — Cycle 1",
+        "status": "STARTED",
+        "verification_field": "DATE_OF_BIRTH",
+        "status_history": [
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "DRAFT",
+            "timestamp": "2026-07-14T09:05:00.397673507Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "READY",
+            "timestamp": "2026-07-14T09:05:00.395755Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "STARTED",
+            "timestamp": "2026-07-14T09:05:00.429514Z"
+          }
+        ],
+        "receiver_registration_message_template": "",
+        "file_name": "UPDATED_DISBURSEMENT_TEMPLATE_PHONE_NUMBER_DATE_OF_BIRTH_CSV.csv",
+        "created_at": "2026-07-14T09:05:00.395755Z",
+        "updated_at": "2026-07-14T09:05:00.429514Z",
+        "registration_contact_type": "PHONE_NUMBER"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "deleted_at": null
+      },
+      "receiver_wallet": {
+        "id": "4496a88b-6909-4ba6-b696-82307723e48e",
+        "receiver": {
+          "id": "4ba3d9b1-95fe-4982-a3c0-81f185fa6883"
+        },
+        "wallet": {
+          "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+          "name": "Demo Wallet",
+          "homepage": "https://demo-wallet.stellar.org",
+          "sep_10_client_domain": "demo-wallet-server.stellar.org",
+          "deep_link_schema": "https://demo-wallet.stellar.org",
+          "enabled": true
+        },
+        "status": "READY",
+        "status_history": [
+          {
+            "status": "DRAFT",
+            "timestamp": "2026-07-14T09:05:00.395755Z"
+          },
+          {
+            "status": "READY",
+            "timestamp": "2026-07-14T09:05:00.429514Z"
+          }
+        ],
+        "created_at": "2026-07-14T09:05:00.395755Z",
+        "updated_at": "2026-07-14T09:05:08.078079Z",
+        "invitation_sent_at": "2026-07-14T09:05:08.078079Z"
+      },
+      "created_at": "2026-07-14T09:05:00.395755Z",
+      "updated_at": "2026-07-14T09:05:00.429514Z",
+      "external_payment_id": "PAY_01"
+    },
+    {
+      "id": "20e0921b-a290-4a83-8f8c-5f378447dfeb",
+      "amount": "520.0000000",
+      "stellar_transaction_id": "",
+      "stellar_operation_id": "",
+      "status": "READY",
+      "status_history": [
+        {
+          "status": "DRAFT",
+          "status_message": "",
+          "timestamp": "2026-07-14T09:05:00.395755Z"
+        },
+        {
+          "status": "READY",
+          "status_message": "",
+          "timestamp": "2026-07-14T09:05:00.429514Z"
+        }
+      ],
+      "type": "DISBURSEMENT",
+      "disbursement": {
+        "id": "e2f93ffa-48db-41ca-bae4-e8788bfb05ad",
+        "name": "Turkana North MPCA — Cycle 1",
+        "status": "STARTED",
+        "verification_field": "DATE_OF_BIRTH",
+        "status_history": [
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "DRAFT",
+            "timestamp": "2026-07-14T09:05:00.397673507Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "READY",
+            "timestamp": "2026-07-14T09:05:00.395755Z"
+          },
+          {
+            "user_id": "ece7386c-7d0a-4daa-b77c-655931082d3c",
+            "status": "STARTED",
+            "timestamp": "2026-07-14T09:05:00.429514Z"
+          }
+        ],
+        "receiver_registration_message_template": "",
+        "file_name": "UPDATED_DISBURSEMENT_TEMPLATE_PHONE_NUMBER_DATE_OF_BIRTH_CSV.csv",
+        "created_at": "2026-07-14T09:05:00.395755Z",
+        "updated_at": "2026-07-14T09:05:00.429514Z",
+        "registration_contact_type": "PHONE_NUMBER"
+      },
+      "asset": {
+        "id": "e6221ffb-3e1f-4382-9880-3afd7fb3f114",
+        "code": "XLM",
+        "issuer": "",
+        "deleted_at": null
+      },
+      "receiver_wallet": {
+        "id": "78d989f2-9fcc-426a-a002-216fdc84047d",
+        "receiver": {
+          "id": "67228e30-64f9-430c-825a-fc0b80522423"
+        },
+        "wallet": {
+          "id": "766c4857-d9b7-438e-b685-74ef90ac6f24",
+          "name": "Demo Wallet",
+          "homepage": "https://demo-wallet.stellar.org",
+          "sep_10_client_domain": "demo-wallet-server.stellar.org",
+          "deep_link_schema": "https://demo-wallet.stellar.org",
+          "enabled": true
+        },
+        "status": "READY",
+        "status_history": [
+          {
+            "status": "DRAFT",
+            "timestamp": "2026-07-14T09:05:00.395755Z"
+          },
+          {
+            "status": "READY",
+            "timestamp": "2026-07-14T09:05:00.429514Z"
+          }
+        ],
+        "created_at": "2026-07-14T09:05:00.395755Z",
+        "updated_at": "2026-07-14T09:05:08.078079Z",
+        "invitation_sent_at": "2026-07-14T09:05:08.078079Z"
+      },
+      "created_at": "2026-07-14T09:05:00.395755Z",
+      "updated_at": "2026-07-14T09:05:00.429514Z",
+      "external_payment_id": "PAY_03"
+    }
+  ]
+}
