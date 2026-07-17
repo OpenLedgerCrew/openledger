@@ -6,7 +6,6 @@ import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
-import { FallbackBadge } from "../components/FallbackBadge";
 import type { Programme } from "../types";
 
 const STATUS_FILTER_OPTIONS = ["DRAFT", "READY", "STARTED", "PAUSED", "COMPLETED"];
@@ -15,9 +14,7 @@ export const ProgrammeView: React.FC = () => {
   const navigate = useNavigate();
   const [programmes, setProgrammes] = useState<Programme[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isFallback, setIsFallback] = useState(false);
   const [waking, setWaking] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [searchParams] = useSearchParams();
@@ -27,15 +24,14 @@ export const ProgrammeView: React.FC = () => {
     setLoading(true);
     setWaking(false);
     const onRetry = () => { if (!cancelled) setWaking(true); };
-    fetchProgrammes(onRetry).then(({ data, source }) => {
+    fetchProgrammes(onRetry).then(({ data }) => {
       if (cancelled) return;
       setProgrammes(data);
-      setIsFallback(source === "fallback");
       setLoading(false);
       setWaking(false);
     });
     return () => { cancelled = true; };
-  }, [retryCount]);
+  }, []);
 
   // Handle ?select=id from home page cards
   useEffect(() => {
@@ -114,9 +110,7 @@ export const ProgrammeView: React.FC = () => {
         )}
 
         {!loading && (
-          <>
-            {isFallback && <FallbackBadge onRetry={() => setRetryCount((c) => c + 1)} />}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredProgrammes.map((programme) => {
               const statusMeta = programmeStatusMeta(programme.status);
               return (
@@ -161,8 +155,7 @@ export const ProgrammeView: React.FC = () => {
                 No programmes match your search.
               </div>
             )}
-            </div>
-          </>
+          </div>
         )}
       </main>
 

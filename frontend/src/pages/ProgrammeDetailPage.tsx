@@ -10,7 +10,6 @@ import { AiSummaryCard } from "../components/AiSummaryCard";
 import { DisclosureBanner } from "../components/DisclosureBanner";
 import { EmailReportButton } from "../components/EmailReportButton";
 import { ExplorerLink } from "../components/ExplorerLink";
-import { FallbackBadge } from "../components/FallbackBadge";
 import { ImpactCharts } from "../components/ImpactCharts";
 import { PaymentDetailsModal } from "../components/PaymentDetailsModal";
 import { Button } from "../components/ui/button";
@@ -27,7 +26,6 @@ export function ProgrammeDetailPage() {
   const [selectedPayment, setSelectedPayment] = useState<PaymentRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [waking, setWaking] = useState(false);
-  const [isFallback, setIsFallback] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const chartsRef = useRef<HTMLDivElement>(null);
 
@@ -38,7 +36,7 @@ export function ProgrammeDetailPage() {
       setWaking(false);
       // Falls back to a captured real-data snapshot internally if the backend is unreachable —
       // only genuinely resolves to null when the programme id doesn't exist anywhere.
-      const { data: body, source } = await fetchProgrammeDetail(programmeId, pageNum, () =>
+      const { data: body } = await fetchProgrammeDetail(programmeId, pageNum, () =>
         setWaking(true),
       );
       if (!body) {
@@ -52,7 +50,6 @@ export function ProgrammeDetailPage() {
       setAggregates(body.aggregates);
       setPayments(body.payments ?? []);
       setTotalPages(body.pagination?.total_pages ?? 1);
-      setIsFallback(source === "fallback");
       setLoading(false);
       setWaking(false);
     },
@@ -168,8 +165,6 @@ export function ProgrammeDetailPage() {
           </div>
         ) : (
           <>
-            {isFallback && <FallbackBadge onRetry={() => fetchData(page)} />}
-
             {/* Page header */}
             <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
               <div>

@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { DisclosureBanner } from "../components/DisclosureBanner";
-import { FallbackBadge } from "../components/FallbackBadge";
 import { fetchProgrammes } from "../api/programmes";
 import type { Programme } from "../types";
 
@@ -17,8 +16,6 @@ export default function PdfExportPage() {
   const [availableProgrammes, setAvailableProgrammes] = useState<Programme[]>([]);
   const [loading, setLoading] = useState(true);
   const [waking, setWaking] = useState(false);
-  const [isFallback, setIsFallback] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [selectedId, setSelectedId] = useState<string>("");
   const [jobs, setJobs] = useState<ExportJob[]>([]);
   const [includePayments, setIncludePayments] = useState(true);
@@ -29,17 +26,16 @@ export default function PdfExportPage() {
   useEffect(() => {
     let cancelled = false;
     setWaking(false);
-    fetchProgrammes(() => { if (!cancelled) setWaking(true); }).then(({ data, source }) => {
+    fetchProgrammes(() => { if (!cancelled) setWaking(true); }).then(({ data }) => {
       if (cancelled) return;
       setAvailableProgrammes(data);
-      setIsFallback(source === "fallback");
       setLoading(false);
       setWaking(false);
     });
     return () => {
       cancelled = true;
     };
-  }, [retryCount]);
+  }, []);
 
   const handleExport = () => {
     if (!selectedId) {
@@ -175,11 +171,6 @@ export default function PdfExportPage() {
                 </option>
               ))}
             </select>
-            {isFallback && (
-              <div style={{ marginTop: 8 }}>
-                <FallbackBadge onRetry={() => setRetryCount((c) => c + 1)} />
-              </div>
-            )}
           </div>
 
           {/* Selected programme info */}

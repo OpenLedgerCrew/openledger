@@ -14,7 +14,6 @@ import { useEffect, useState } from "react";
 import { Container, PageShell, Section } from "../components/ui/PageShell";
 import { StatCard } from "../components/ui/StatCard";
 import { Button } from "../components/ui/button";
-import { FallbackBadge } from "../components/FallbackBadge";
 import { fetchGlobalAggregates, fetchProgrammes } from "../api/programmes";
 import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import type { Programme, ProgrammeAggregates } from "../types";
@@ -67,9 +66,7 @@ const HOW_IT_WORKS = [
 export default function HomePage() {
   const [programmes, setProgrammes] = useState<Programme[]>([]);
   const [aggregates, setAggregates] = useState<ProgrammeAggregates | null>(null);
-  const [isFallback, setIsFallback] = useState(false);
   const [waking, setWaking] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,12 +78,11 @@ export default function HomePage() {
         if (cancelled) return;
         setProgrammes(programmesResult.data);
         setAggregates(aggregatesResult.data);
-        setIsFallback(programmesResult.source === "fallback" || aggregatesResult.source === "fallback");
         setWaking(false);
       },
     );
     return () => { cancelled = true; };
-  }, [retryCount]);
+  }, []);
 
   const totalDisbursed =
     aggregates?.totals_by_asset.map((t) => `${t.total} ${t.asset}`).join(", ") ?? "—";
@@ -139,7 +135,6 @@ export default function HomePage() {
               Waking up the live server — this can take up to a minute if it's been idle…
             </p>
           )}
-          {isFallback && <FallbackBadge onRetry={() => setRetryCount((c) => c + 1)} />}
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
             <StatCard label="Total Disbursed" value={totalDisbursed} />
             <StatCard
