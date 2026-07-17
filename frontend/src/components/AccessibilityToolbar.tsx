@@ -79,19 +79,14 @@ export function AccessibilityToolbar() {
   const pausedRef = useRef(false);
   const restartingRef = useRef(false);
 
-  // ── Init ───────────────────────────────────────────────────────────────
+  // ── Init (support detection only) ────────────────────────────────────────
   useEffect(() => {
     const saved = localStorage.getItem(HIGH_CONTRAST_KEY) === "1";
     setHighContrast(saved);
     document.documentElement.classList.toggle("high-contrast", saved);
 
     const Ctor = getSpeechRecognitionCtor();
-    const supported = Boolean(Ctor) && "speechSynthesis" in window;
-    setVoiceSupported(supported);
-
-    if (supported && Ctor) {
-      initWakeRecognition(Ctor);
-    }
+    setVoiceSupported(Boolean(Ctor) && "speechSynthesis" in window);
 
     return () => {
       if (heardTimeoutRef.current) clearTimeout(heardTimeoutRef.current);
@@ -100,6 +95,23 @@ export function AccessibilityToolbar() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Wake-word listener lifecycle ─────────────────────────────────────────
+  // Only one SpeechRecognition session can run at a time, so this listener must
+  // yield the mic while VoiceOverlay's own command recognizer is active, and
+  // resume once the overlay closes (unless explicitly paused).
+  useEffect(() => {
+    if (!voiceSupported) return;
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor) return;
+
+    if (voiceActive) {
+      try { wakeRef.current?.abort(); } catch { /* ignore */ }
+    } else if (!pausedRef.current) {
+      initWakeRecognition(Ctor);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceActive, voiceSupported]);
 
   function initWakeRecognition(Ctor: new () => ISpeechRecognition) {
     if (wakeRef.current) {
@@ -244,8 +256,8 @@ export function AccessibilityToolbar() {
     } else if (c.includes("resume")) {
       pausedRef.current = false;
       setVoicePaused(false);
-      const Ctor = getSpeechRecognitionCtor();
-      if (Ctor) initWakeRecognition(Ctor);
+      // setVoiceActive(false) below triggers the wake-listener-lifecycle effect, which
+      // restarts the wake recognizer now that pausedRef is false — no manual restart needed here.
       announceHeard(transcript, "voice detection resumed");
       setVoiceActive(false);
     } else if (c.includes("close") || c.includes("dismiss")) {

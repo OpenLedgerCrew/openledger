@@ -16,7 +16,7 @@ export function Logo({ className }: LogoProps) {
       )}
     >
       <span className="font-semibold">
-        Open<span className="text-primary">Ledger</span>
+        <span className="text-primary">Sapcone</span>
       </span>
     </Link>
   );

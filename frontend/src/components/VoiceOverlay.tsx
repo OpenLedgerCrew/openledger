@@ -14,14 +14,12 @@ export const VOICE_COMMANDS = [
   { phrase: '"close" / "dismiss"', does: "closes this overlay" },
 ];
 
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => ISpeechRecognitionOverlay;
-    webkitSpeechRecognition?: new () => ISpeechRecognitionOverlay;
-  }
-}
-
-interface ISpeechRecognitionOverlay extends EventTarget {
+// Not declared as a `declare global` augmentation here — AccessibilityToolbar.tsx (the only
+// place that renders this component) already augments `Window` with a stricter version of the
+// same shape. A second, looser `declare global` block for the same properties would conflict
+// (TS requires merged global declarations to be identical types), so this stays a local,
+// structural type used only to describe the instance this file creates.
+interface SpeechRecognitionInstance extends EventTarget {
   lang: string;
   continuous: boolean;
   interimResults: boolean;
@@ -42,7 +40,7 @@ export interface VoiceOverlayProps {
 
 export function VoiceOverlay({ onClose, paused = false, onCommand }: VoiceOverlayProps) {
   const firstBtnRef = useRef<HTMLButtonElement>(null);
-  const cmdRecRef = useRef<ISpeechRecognitionOverlay | null>(null);
+  const cmdRecRef = useRef<SpeechRecognitionInstance | null>(null);
 
   // Start command-mode speech recognition when overlay opens
   useEffect(() => {

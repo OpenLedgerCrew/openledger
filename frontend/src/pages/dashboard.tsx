@@ -99,7 +99,7 @@ export default function HomePage() {
           </span>
 
           <h1 className="mt-6 text-5xl font-bold font-serif text-foreground">
-            Open<span className="text-primary">Ledger</span>
+           Sapcone <span className="text-primary">OpenLedger</span>
           </h1>
 
           <p className="mt-3 text-xl text-primary font-semibold">
