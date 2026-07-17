@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { Sparkles, Volume2, Square } from "lucide-react";
 import { fetchAiSummary } from "../api/ai";
 
 export interface AiSummaryCardProps {
   programmeId: string;
 }
 
-/**
- * AI transparency summary — a short, plain-language readout of the aggregate data, generated
- * server-side (real LLM call when ANTHROPIC_API_KEY is configured, deterministic otherwise).
- * Includes a "read aloud" control so the summary itself is accessible without reading text.
- */
 export function AiSummaryCard({ programmeId }: AiSummaryCardProps) {
   const [summary, setSummary] = useState<string | null>(null);
   const [source, setSource] = useState<"ai" | "fallback" | null>(null);
@@ -32,9 +28,7 @@ export function AiSummaryCard({ programmeId }: AiSummaryCardProps) {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [programmeId]);
 
   const readAloud = () => {
@@ -55,7 +49,9 @@ export function AiSummaryCard({ programmeId }: AiSummaryCardProps) {
   if (loading) {
     return (
       <div style={cardStyle}>
-        <p style={{ margin: 0, fontSize: 13, color: "#9ca3af" }}>Generating transparency summary…</p>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--muted-foreground)" }}>
+          Generating transparency summary…
+        </p>
       </div>
     );
   }
@@ -66,33 +62,43 @@ export function AiSummaryCard({ programmeId }: AiSummaryCardProps) {
     <div style={cardStyle}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 16 }}>✨</span>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#1a1714" }}>
+          <Sparkles size={16} aria-hidden="true" style={{ color: "var(--primary)" }} />
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--foreground)" }}>
             AI Transparency Summary
           </p>
         </div>
         <button
           onClick={readAloud}
           aria-pressed={speaking}
-          title="Read summary aloud"
+          aria-label={speaking ? "Stop reading summary aloud" : "Read summary aloud"}
           style={{
-            border: "1px solid #5da76e40",
-            backgroundColor: speaking ? "#5da76e" : "transparent",
-            color: speaking ? "#fff" : "#5da76e",
+            border: "1px solid color-mix(in oklch, var(--primary) 40%, transparent)",
+            backgroundColor: speaking ? "var(--primary)" : "transparent",
+            color: speaking ? "var(--primary-foreground)" : "var(--primary)",
             borderRadius: 8,
-            padding: "4px 8px",
+            padding: "4px 10px",
             fontSize: 11,
             fontWeight: 700,
             cursor: "pointer",
             whiteSpace: "nowrap",
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            minHeight: 32,
           }}
         >
-          {speaking ? "■ Stop" : "🔊 Listen"}
+          {speaking ? (
+            <><Square size={10} aria-hidden="true" /> Stop</>
+          ) : (
+            <><Volume2 size={12} aria-hidden="true" /> Listen</>
+          )}
         </button>
       </div>
-      <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: "#374151" }}>{summary}</p>
+      <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.6, color: "var(--foreground)" }}>
+        {summary}
+      </p>
       {source === "fallback" && (
-        <p style={{ margin: "10px 0 0", fontSize: 10, color: "#9ca3af" }}>
+        <p style={{ margin: "10px 0 0", fontSize: 10, color: "var(--muted-foreground)" }}>
           Generated from programme data. Connect an AI API key for a richer summary.
         </p>
       )}
@@ -101,8 +107,8 @@ export function AiSummaryCard({ programmeId }: AiSummaryCardProps) {
 }
 
 const cardStyle: React.CSSProperties = {
-  backgroundColor: "#f7fbf8",
-  border: "1px solid #5da76e30",
+  backgroundColor: "color-mix(in oklch, var(--success) 8%, var(--card))",
+  border: "1px solid color-mix(in oklch, var(--success) 25%, transparent)",
   borderRadius: 16,
   padding: 16,
 };

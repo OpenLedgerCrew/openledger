@@ -3,6 +3,10 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+// Overridable so a local dev server can point at a remotely-tunneled backend
+// (e.g. VITE_BACKEND_URL=https://xxxx.ngrok-free.dev npm run dev).
+const backendTarget = process.env.VITE_BACKEND_URL || "http://localhost:3001";
+
 export default defineConfig({
   plugins: [
     react(),
@@ -11,7 +15,13 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      "/api": { target: "http://localhost:3001", changeOrigin: true },
+      "/api": {
+        target: backendTarget,
+        changeOrigin: true,
+        // Bypasses ngrok's free-tier browser-warning interstitial, which would
+        // otherwise return an HTML page instead of JSON through the proxy.
+        headers: { "ngrok-skip-browser-warning": "true" },
+      },
     },
   },
   test: {
