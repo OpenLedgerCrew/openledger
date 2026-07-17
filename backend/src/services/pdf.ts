@@ -22,16 +22,37 @@ function logEngine(engine: string): void {
   }
 }
 
-async function renderWithPuppeteer(data: ReportData): Promise<Buffer> {
-  // Dynamic import so a missing/unusable Chromium only affects the export path, not app boot.
+// Constrained Linux containers (Render, and most PaaS/serverless hosts) don't ship the shared
+// libraries Puppeteer's own downloaded Chromium needs (libnss3, libatk-bridge, libgbm, etc.) —
+// it's a desktop-browser-sized dependency footprint most server images deliberately strip out.
+// @sparticuz/chromium bundles a Chromium build compiled specifically for that environment.
+// RENDER is injected automatically by Render's runtime, so this needs no extra configuration.
+async function launchBrowser() {
+  if (process.env.RENDER) {
+    const [{ default: chromium }, { default: puppeteerCore }] = await Promise.all([
+      import('@sparticuz/chromium'),
+      import('puppeteer-core'),
+    ]);
+    return puppeteerCore.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
+  }
+
   const { default: puppeteer } = await import('puppeteer');
-  const browser = await puppeteer.launch({
+  return puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
     // Lets an install point at a system-installed Chrome/Chromium (e.g. when the bundled
     // per-OS download is blocked or skipped) instead of always requiring puppeteer's own binary.
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
   });
+}
+
+async function renderWithPuppeteer(data: ReportData): Promise<Buffer> {
+  // Dynamic import so a missing/unusable Chromium only affects the export path, not app boot.
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     await page.setContent(renderProgrammeReportHtml(data), { waitUntil: 'load' });
@@ -99,7 +120,7 @@ async function renderWithPdfLib(data: ReportData): Promise<Buffer> {
 export async function renderProgrammePdf(data: ReportData): Promise<Buffer> {
   try {
     const pdf = await renderWithPuppeteer(data);
-    logEngine('puppeteer');
+    logEngine(process.env.RENDER ? 'puppeteer-core + @sparticuz/chromium' : 'puppeteer');
     return pdf;
   } catch (err) {
     logEngine(`pdf-lib (puppeteer unavailable: ${(err as Error).message.split('\n')[0]})`);

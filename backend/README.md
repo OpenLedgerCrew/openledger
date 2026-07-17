@@ -175,6 +175,23 @@ Two engines, tried in order (`src/services/pdf.ts`):
    laid out as plain text so the export still succeeds. The engine actually used is logged once
    on first export (`[pdf] rendering engine: ...`).
 
+**Where Chromium comes from depends on the environment:**
+
+- **Local dev / any full desktop OS** — the regular `puppeteer` package's own downloaded
+  Chromium (Mac/Windows/desktop Linux ship the shared libraries it needs; `PUPPETEER_EXECUTABLE_PATH`
+  can point it at a system-installed Chrome instead if you'd rather not let it download one).
+- **Render** (detected automatically via the `RENDER` env var Render injects at runtime) —
+  `puppeteer-core` + `@sparticuz/chromium` instead. Constrained container/PaaS hosts generally
+  don't ship the shared libraries (`libnss3`, `libatk-bridge`, `libgbm`, fonts, etc.) the regular
+  Puppeteer-downloaded Chromium binary needs — it's a desktop-browser-sized dependency footprint
+  most server images strip out — so `puppeteer.launch()` fails silently there and the export
+  quietly degrades to the plain-text pdf-lib fallback. `@sparticuz/chromium` ships a Chromium
+  build compiled specifically to run in that kind of environment.
+- If you deploy to a different constrained host (Fly.io, a bare Docker image, etc.) and see the
+  same silent plain-text degradation, either install the missing system libraries in that image,
+  or extend the `process.env.RENDER` check in `launchBrowser()` (`src/services/pdf.ts`) to also
+  detect that platform's own env var and route it through the same `@sparticuz/chromium` path.
+
 ## Architecture notes
 
 - **No runtime chain dependency.** Explorer links are pure string concatenation
