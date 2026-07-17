@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, MessageSquare } from "lucide-react";
 import { Logo } from "./ui/Logo";
 import { cn } from "./lib/utils";
 import { Button } from "./ui/button";
-import { DonateModal } from "./DonateModal";
 import { useChatContext } from "../contexts/ChatContext";
 
 const NAV = [
@@ -17,7 +16,11 @@ const NAV = [
 export function Header() {
   const { chatOpen, toggleChat } = useChatContext();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [donateOpen, setDonateOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleDonateClick = () => {
+    navigate("/about", { state: { openDonateModal: true } });
+  };
 
   return (
     <>
@@ -55,7 +58,7 @@ export function Header() {
             <Button
               variant="default"
               size="sm"
-              onClick={() => setDonateOpen(true)}
+              onClick={handleDonateClick}
               className="hidden md:inline-flex"
             >
               Donate to Sapcone
@@ -126,7 +129,7 @@ export function Header() {
                 variant="default"
                 size="sm"
                 className="w-full justify-center"
-                onClick={() => { setMobileNavOpen(false); setDonateOpen(true); }}
+                onClick={() => { setMobileNavOpen(false); handleDonateClick(); }}
               >
                 Donate to Sapcone
               </Button>
@@ -144,8 +147,7 @@ export function Header() {
           </nav>
         )}
       </header>
-
-      <DonateModal open={donateOpen} onClose={() => setDonateOpen(false)} />
     </>
+
   );
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { PageShell, Container, Section } from "../components/ui/PageShell";
 import { WalletConnect } from "../components/donation/WalletConnect";
 import { Stats } from "../components/donation/Stats";
@@ -11,6 +12,7 @@ import { Button } from "../components/ui/button";
 const DEFAULT_WALLET: WalletState = { connected: false, publicKey: null, network: null };
 
 export function About() {
+  const location = useLocation();
   const [showDonateModal, setShowDonateModal] = useState(false);
   const [wallet, setWallet] = useState<WalletState>(DEFAULT_WALLET);
   const [stats, setStats] = useState<ContractStats | null>(null);
@@ -34,6 +36,12 @@ export function About() {
       setHistoryLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (location.state && (location.state as { openDonateModal?: boolean }).openDonateModal) {
+      setShowDonateModal(true);
+    }
+  }, [location.state]);
 
   // Public, anonymous contract reads only — no wallet touched. Fires when the donate modal
   // opens (not on page mount) so a plain visit to /about never makes an RPC call.
