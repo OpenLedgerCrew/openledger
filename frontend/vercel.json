@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://openledger-79ty.onrender.com/api/:path*" }
+  ]
+}
