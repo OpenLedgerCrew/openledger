@@ -60,8 +60,8 @@ interface SdpPaymentRecord {
  * Read-only HTTP consumer of the SDP fork's API (D-2: "Read via the fork's API, not its
  * database"). Endpoints and field names below match the deployed fork (verified directly
  * against its Go source, not guessed): GET /disbursements/:id, GET /disbursements (paginated),
- * GET /payments (paginated via page/page_limit, filterable by type/status/receiver_id/created_at
- * range — but not by disbursement id, see getPayments below).
+ * GET /payments (paginated via page/page_limit, filterable by type/status/receiver_id/
+ * disbursement_id/created_at range).
  *
  * Every call still degrades gracefully: an unreachable fork or a non-OK / malformed response
  * yields an empty result instead of throwing, so the portal stays up and simply shows no data
@@ -109,15 +109,13 @@ export function createSdpForkClient(config: SdpForkClientConfig): SdpForkClient 
     },
 
     async getPayments(programmeId: string): Promise<Payment[]> {
-      // The fork has no disbursement_id filter on /payments (verified against its query
-      // validator), so every DISBURSEMENT-type payment page is fetched and scoped to this
-      // programme in-memory here. Contained to this adapter; does not scale to very large
-      // disbursements, but the fork's Go backend is out of bounds to change.
+      // The fork filters server-side by disbursement_id, so each page already contains
+      // only this programme's payments.
       const rows: SdpPaymentRecord[] = [];
       let page = 1;
       for (;;) {
         const data = await fetchJson(
-          `/payments?type=DISBURSEMENT&page_limit=${PAGE_LIMIT}&page=${page}`,
+          `/payments?type=DISBURSEMENT&disbursement_id=${encodeURIComponent(programmeId)}&page_limit=${PAGE_LIMIT}&page=${page}`,
         );
         const parsed = data as SdpPaginatedResponse<SdpPaymentRecord> | null;
         if (!parsed || !Array.isArray(parsed.data)) break;
@@ -126,22 +124,20 @@ export function createSdpForkClient(config: SdpForkClientConfig): SdpForkClient 
         page += 1;
       }
 
-      return rows
-        .filter((row) => row.disbursement?.id === programmeId)
-        .map((row) => {
-          const successEntry = row.status_history?.find((h) => h.status === 'SUCCESS');
-          const raw: RawPaymentRecord = {
-            reference_id: row.external_payment_id || row.id,
-            amount: row.amount,
-            asset: row.asset?.code,
-            status: row.status,
-            created_at: row.created_at,
-            settled_at: successEntry?.timestamp ?? null,
-            tx_hash: row.stellar_transaction_id || null,
-          };
-          // Strip PII at the adapter (D-3) before the record travels any further.
-          return filterPayment(raw) as unknown as Payment;
-        });
+      return rows.map((row) => {
+        const successEntry = row.status_history?.find((h) => h.status === 'SUCCESS');
+        const raw: RawPaymentRecord = {
+          reference_id: row.external_payment_id || row.id,
+          amount: row.amount,
+          asset: row.asset?.code,
+          status: row.status,
+          created_at: row.created_at,
+          settled_at: successEntry?.timestamp ?? null,
+          tx_hash: row.stellar_transaction_id || null,
+        };
+        // Strip PII at the adapter (D-3) before the record travels any further.
+        return filterPayment(raw) as unknown as Payment;
+      });
     },
 
     async getDeliveries(_programmeId: string): Promise<DeliveryConfirmation[]> {
