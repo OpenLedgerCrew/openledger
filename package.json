@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "check": "cd backend && npm ci --no-audit --no-fund && npx tsc --noEmit && npx vitest run && cd ../frontend && npm ci --no-audit --no-fund && npx tsc --noEmit && npx vite build"
+  },
   "dependencies": {
     "framer-motion": "^12.42.2",
     "react-icons": "^5.7.0",
