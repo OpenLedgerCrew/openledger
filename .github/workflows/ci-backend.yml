@@ -24,8 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      # PDF tests fall back to pdf-lib; skip the ~150 MB Chrome download.
+      # Use the Chrome preinstalled on ubuntu-latest instead of Puppeteer's ~150 MB download.
+      # (The pdf-lib fallback's output is not reliably parsed by pdf-parse in the PDF tests.)
       PUPPETEER_SKIP_DOWNLOAD: "true"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
     defaults:
       run:
         working-directory: backend
