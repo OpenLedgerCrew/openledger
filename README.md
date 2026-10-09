@@ -180,6 +180,15 @@ The **backend**'s configuration is a real `.env` file (`openledger/backend/.env`
 
 ---
 
+## Before Opening a PR
+
+Run `npm run check` from the repo root — it runs exactly what CI runs (backend typecheck +
+tests, frontend typecheck + build). CI is deliberately lean because GitHub Actions minutes
+are limited: each workflow runs only on PRs to `main` that touch its folder. Team working
+rules are in the backend repo's `ARCHITECTURE.md`.
+
+---
+
 ## Branch Strategy
 
 | Branch | Purpose |
