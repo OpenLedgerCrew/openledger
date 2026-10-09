@@ -14,13 +14,13 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   check:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    # Job-level so skipped (draft) runs never cancel real ones.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
