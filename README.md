@@ -14,7 +14,7 @@ OpenLedger is Product 3 of a three-product disbursement and verification system 
 | **LastMile** | Delivers to beneficiaries without phones — records physical delivery confirmations via field agents |
 | **OpenLedger** | The proof layer — lets outsiders verify that both the funds movement and the physical delivery happened |
 
-OpenLedger reads from a fork of DisburseFlow's data model and displays that data publicly. It does not sit inside the money movement path; it only reads and presents what already exists on-chain or in the delivery record.
+OpenLedger reads from the canonical SAPCONE backend ([`Sapcone/stellar-disbursement-platform-backend`](https://github.com/Sapcone/stellar-disbursement-platform-backend)) — the one SDP API that serves both DisburseFlow and LastMile — and displays that data publicly. It never shares that backend's database; it reads over HTTP with a read-only API key (see that repo's `ARCHITECTURE.md`). It does not sit inside the money movement path; it only reads and presents what already exists on-chain or in the delivery record.
 
 ---
 
@@ -150,11 +150,13 @@ The compiled output will be placed in `frontend/dist/`.
 
 ---
 
-## Running Against a Real DisburseFlow (G3) Fork Locally
+## Running Against the Canonical Backend Locally
 
 By default the backend serves in-memory seed data (see `backend/README.md`), which is enough to
-develop the UI without any other services running. To develop against the **real** DisburseFlow
-fork (G3) instead — real disbursements, real payments, real Stellar transaction hashes, seeded
+develop the UI without any other services running. To develop against the **real** canonical
+SAPCONE backend instead, start it (see its `Canonical.md`), set `SDP_FORK_BASE_URL=http://localhost:8000`
+and a read-only `SDP_API_KEY` in `backend/.env`. The runbook was written against the Studio-era
+DisburseFlow fork (G3); its steps carry over — real disbursements, real payments, real Stellar transaction hashes, seeded
 demo data, and remote/ngrok access for teammates — see **[`docs/RUNBOOK.md`](docs/RUNBOOK.md)**
 for the full step-by-step and a troubleshooting section covering every failure mode we've hit
 setting this up.
@@ -203,16 +205,16 @@ The **backend**'s configuration is a real `.env` file (`openledger/backend/.env`
 
 ## Integration Points
 
-### 1. DisburseFlow Fork
+### 1. Canonical SAPCONE backend
 
-OpenLedger reads all payment and programme data from a read-only fork of DisburseFlow's database. The backend exposes this data via REST endpoints. The frontend calls:
+OpenLedger reads all payment and programme data from the canonical SAPCONE backend's API (`SDP_FORK_BASE_URL`, read-only `SDP_API_KEY`). The backend exposes this data via REST endpoints. The frontend calls:
 
 - `GET /api/programmes/:programmeId` — programme aggregates and paginated payment table
 - `GET /api/programmes/:programmeId/export.pdf` — full PDF impact report
 
 ### 2. LastMile
 
-Delivery confirmation data — including confirmation timestamps and anchoring transaction hashes — is included in the DisburseFlow fork's data model. OpenLedger surfaces this data alongside payment records where it exists. No direct call is made to LastMile at runtime.
+Delivery confirmation data — including confirmation timestamps and anchoring transaction hashes — comes from the same canonical backend, where LastMile runs (the public read endpoint for it is still to be added). OpenLedger surfaces this data alongside payment records where it exists. No direct call is made to LastMile at runtime.
 
 ### 3. Stellar Explorer
 

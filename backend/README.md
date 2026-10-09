@@ -43,7 +43,7 @@ OpenLedger backend listening on 0.0.0.0:3001 (data source: in-memory seed data)
 | --- | --- | --- |
 | `PORT` | `3001` | Port to listen on |
 | `HOST` | `0.0.0.0` | Host to bind |
-| `SDP_FORK_BASE_URL` | *(unset)* | Base URL of a live SDP fork (DisburseFlow/G3) read API. When unset, the server serves **baked-in seed data** instead (see below) |
+| `SDP_FORK_BASE_URL` | *(unset)* | Base URL of the canonical SAPCONE backend API (`Sapcone/stellar-disbursement-platform-backend`, locally `http://localhost:8000`). When unset, the server serves **baked-in seed data** instead (see below) |
 | `SDP_API_KEY` | *(unset)* | Read-only API key for the fork above (`Authorization: Bearer SDP_...`), scoped to `read:disbursements` + `read:payments`. Required whenever `SDP_FORK_BASE_URL` is set — see the root README's "Running Against a Real DisburseFlow (G3) Fork Locally" for how to mint one |
 | `EXPLORER_BASE_URL` | `https://stellar.expert/explorer/testnet` | Base URL used to build explorer deep links (`{base}/tx/{hash}`) |
 | `OPENROUTER_API_KEY` | *(unset)* | Enables the AI transparency summary and chat assistant via OpenRouter. Without it, both features still work — they answer from a deterministic, non-AI fallback |
