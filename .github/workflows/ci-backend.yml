@@ -47,4 +47,6 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Test
-        run: npx vitest run
+        # One test file at a time (one Chrome launch at a time) and a longer timeout:
+        # Chrome cold-starts slowly on the runner and parallel launches can fail.
+        run: npx vitest run --no-file-parallelism --testTimeout=30000
