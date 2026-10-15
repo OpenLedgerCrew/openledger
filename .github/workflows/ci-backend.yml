@@ -1,0 +1,52 @@
+# Lean CI (GitHub Free minutes are limited): only on PRs that touch backend/.
+# `npm run check` at the repo root runs the same steps locally — run it before opening a PR.
+name: Backend
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci-backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.draft == false
+    # Job-level so skipped (draft) runs never cancel real ones.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Use the Chrome preinstalled on ubuntu-latest instead of Puppeteer's ~150 MB download.
+      # (The pdf-lib fallback's output is not reliably parsed by pdf-parse in the PDF tests.)
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Test
+        # One test file at a time (one Chrome launch at a time) and a longer timeout:
+        # Chrome cold-starts slowly on the runner and parallel launches can fail.
+        run: npx vitest run --no-file-parallelism --testTimeout=30000

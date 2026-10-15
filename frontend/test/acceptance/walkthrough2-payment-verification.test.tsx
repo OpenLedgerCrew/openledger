@@ -27,7 +27,7 @@ describe('walkthrough 2 — payment verification (doc section 6.2)', () => {
     expect(await screen.findByText(/REF-001/)).toBeInTheDocument();
     expect(screen.getByText(/100\.00/)).toBeInTheDocument();
     expect(screen.getByText(/SUCCESS/i)).toBeInTheDocument();
-    expect(screen.getByText(/2026-07-01/)).toBeInTheDocument();
+    expect(screen.getAllByText(/2026-07-01/)[0]).toBeInTheDocument();
     expect(screen.getByText(new RegExp(TX_HASH.slice(0, 16)))).toBeInTheDocument();
   });
 

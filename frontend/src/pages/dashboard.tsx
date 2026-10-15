@@ -17,6 +17,7 @@ import { Button } from "../components/ui/button";
 import { fetchGlobalAggregates, fetchProgrammes } from "../api/programmes";
 import { programmeStatusMeta } from "../components/lib/programmeStatus";
 import type { Programme, ProgrammeAggregates } from "../types";
+import { formatDeliveryRate } from "../utils/formatters";
 
 const HOW_IT_WORKS = [
   {
@@ -86,10 +87,7 @@ export default function HomePage() {
 
   const totalDisbursed =
     aggregates?.totals_by_asset.map((t) => `${t.total} ${t.asset}`).join(", ") ?? "—";
-  const deliveryRate =
-    aggregates?.delivery_rate !== null && aggregates?.delivery_rate !== undefined
-      ? `${(aggregates.delivery_rate * 100).toFixed(1)}%`
-      : "—";
+  const deliveryRate = formatDeliveryRate(aggregates?.delivery_rate);
 
   return (
     <PageShell>

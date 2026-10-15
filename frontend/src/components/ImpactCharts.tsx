@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import type { ProgrammeAggregates } from "../types";
+import { formatDeliveryRate } from "../utils/formatters";
 
 export interface ImpactChartsProps {
   aggregates: ProgrammeAggregates;
@@ -91,7 +92,7 @@ export function ImpactCharts({ aggregates }: ImpactChartsProps) {
         <ChartCard title="Delivery rate">
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 220 }}>
             <p style={{ fontSize: 44, fontWeight: 800, color: "#5da76e", margin: 0 }}>
-              {(aggregates.delivery_rate * 100).toFixed(1)}%
+              {formatDeliveryRate(aggregates.delivery_rate)}
             </p>
             <p style={{ fontSize: 12, color: "#6b7280", margin: "8px 0 0", textAlign: "center" }}>
               {aggregates.rate_basis.confirmed} confirmed / {aggregates.rate_basis.confirmed + aggregates.rate_basis.awaiting_confirmation} with a delivery record
