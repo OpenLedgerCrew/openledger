@@ -2,6 +2,7 @@ import React from "react";
 import { Mail } from "lucide-react";
 import { Button } from "./ui/button";
 import type { ProgrammeAggregates } from "../types";
+import { formatDeliveryRate } from "../utils/formatters";
 
 export interface EmailReportButtonProps {
   programmeId: string;
@@ -26,7 +27,7 @@ export function EmailReportButton({ programmeId, programmeName, aggregates, clas
       }
       lines.push(`Payments settled: ${aggregates.payment_count.settled}`);
       if (aggregates.delivery_rate !== null) {
-        lines.push(`Delivery rate: ${(aggregates.delivery_rate * 100).toFixed(1)}%`);
+        lines.push(`Delivery rate: ${formatDeliveryRate(aggregates.delivery_rate)}`);
       }
       lines.push("");
     }

@@ -147,6 +147,9 @@ export function apiServer() {
     http.get('*/programmes/:programmeId/payments/:referenceId', () =>
       HttpResponse.json(paymentDetailFixture),
     ),
+    http.get('*/payments/:paymentId', () =>
+      HttpResponse.json(paymentDetailFixture),
+    ),
     http.get('*/programmes', () => HttpResponse.json({ programmes: programmesListFixture })),
     http.get('*/aggregates', () => HttpResponse.json(globalAggregatesFixture)),
     http.get('*/programmes/:programmeId', () => HttpResponse.json(programmeFixture)),

@@ -13,6 +13,7 @@ import { ExplorerLink } from "../components/ExplorerLink";
 import { ImpactCharts } from "../components/ImpactCharts";
 import { PaymentDetailsModal } from "../components/PaymentDetailsModal";
 import { Button } from "../components/ui/button";
+import { formatDeliveryRate } from "../utils/formatters";
 
 export function ProgrammeDetailPage() {
   const { programmeId } = useParams<{ programmeId: string }>();
@@ -226,7 +227,7 @@ export function ProgrammeDetailPage() {
                   {aggregates.delivery_rate !== null && (
                     <StatTile
                       label="Delivery Rate"
-                      value={`${(aggregates.delivery_rate * 100).toFixed(1)}%`}
+                      value={formatDeliveryRate(aggregates.delivery_rate)}
                       accent
                     />
                   )}

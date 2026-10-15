@@ -8,6 +8,7 @@ import { EmailReportButton } from "./EmailReportButton";
 import { ExplorerLink } from "./ExplorerLink";
 import { ImpactCharts } from "./ImpactCharts";
 import { PaymentDetailsModal } from "./PaymentDetailsModal";
+import { formatDeliveryRate } from "../utils/formatters";
 
 export interface ProgrammeDetailModalProps {
   open: boolean;
@@ -237,7 +238,7 @@ export function ProgrammeDetailModal({
                     {aggregates.delivery_rate !== null && (
                       <StatTile
                         label="Delivery Rate"
-                        value={`${(aggregates.delivery_rate * 100).toFixed(1)}%`}
+                        value={formatDeliveryRate(aggregates.delivery_rate)}
                         accent
                       />
                     )}

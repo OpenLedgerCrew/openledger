@@ -126,7 +126,7 @@ export function PaymentTable({ payments, page, totalPages, onPageChange }: Payme
               </p>
             </div>
             <div>
-              <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
+              <div className="isolate inline-flex -space-x-px rounded-md shadow-xs">
                 <button
                   disabled={page <= 1}
                   onClick={() => onPageChange?.(page - 1)}
@@ -155,7 +155,7 @@ export function PaymentTable({ payments, page, totalPages, onPageChange }: Payme
                   <span className="sr-only">Next</span>
                   &rarr;
                 </button>
-              </nav>
+              </div>
             </div>
           </div>
         </nav>

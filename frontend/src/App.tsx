@@ -27,6 +27,20 @@ function PaymentDetailRoute() {
   );
 }
 
+function SinglePaymentRoute() {
+  const { paymentId } = useParams<{ paymentId: string }>();
+  if (!paymentId) return null;
+  return (
+    <PageShell>
+      <Section>
+        <Container size="narrow">
+          <PaymentDetail paymentId={paymentId} />
+        </Container>
+      </Section>
+    </PageShell>
+  );
+}
+
 export default function App() {
   const { chatOpen, setChatOpen } = useChatContext();
 
@@ -50,6 +64,7 @@ export default function App() {
             path="/programmes/:programmeId/payments/:referenceId"
             element={<PaymentDetailRoute />}
           />
+          <Route path="/payments/:paymentId" element={<SinglePaymentRoute />} />
           <Route path="/export" element={<PdfExport />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

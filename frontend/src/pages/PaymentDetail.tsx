@@ -3,36 +3,48 @@ import { DisclosureBanner } from "../components/DisclosureBanner";
 import { ExplorerLink } from "../components/ExplorerLink";
 import { Button } from "../components/ui/button";
 
+import { getPaymentDetail } from "../services/api";
+
 export interface PaymentDetailProps {
-  programmeId: string;
-  referenceId: string;
+  programmeId?: string;
+  referenceId?: string;
+  paymentId?: string;
 }
 
-export function PaymentDetail({ programmeId, referenceId }: PaymentDetailProps) {
+export function PaymentDetail({ programmeId, referenceId, paymentId }: PaymentDetailProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const effectiveId = paymentId || referenceId;
+
   useEffect(() => {
+    if (!effectiveId) return;
     setLoading(true);
-    fetch(`/api/programmes/${programmeId}/payments/${referenceId}`)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to load payment detail");
+
+    const loadData = async () => {
+      try {
+        if (paymentId && !programmeId) {
+          const res = await getPaymentDetail(paymentId);
+          setData(res);
+        } else {
+          const res = await fetch(`/api/programmes/${programmeId}/payments/${effectiveId}`);
+          if (!res.ok) {
+            throw new Error(`Failed to load payment detail (${res.status})`);
+          }
+          const json = await res.json();
+          setData(json);
         }
-        return res.json();
-      })
-      .then((json) => {
-        setData(json);
         setError(null);
-      })
-      .catch((err) => {
-        setError(err.message);
-      })
-      .finally(() => {
+      } catch (err: any) {
+        setError(err instanceof Error ? err.message : "Payment detail not found.");
+      } finally {
         setLoading(false);
-      });
-  }, [programmeId, referenceId]);
+      }
+    };
+
+    loadData();
+  }, [programmeId, referenceId, paymentId, effectiveId]);
 
   if (loading) {
     return (
