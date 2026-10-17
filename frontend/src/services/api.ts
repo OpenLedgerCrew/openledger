@@ -1,4 +1,6 @@
 import type { PaymentRow, Programme, ProgrammeAggregates } from "../types";
+import type { PaymentDetail } from "../types/openledger";
+import { triggerRateLimitAlert } from "../utils/rateLimit";
 
 /**
  * Structured error class thrown by API functions when a non-200 response is encountered.
@@ -61,6 +63,9 @@ export interface PaymentDetailResponse {
  * of silently failing or returning null.
  */
 export async function parseErrorResponse(res: Response): Promise<never> {
+  if (res.status === 429) {
+    triggerRateLimitAlert();
+  }
   let message = `Request failed with status ${res.status}`;
   let errorData: any = null;
 
@@ -121,9 +126,9 @@ export async function getProgrammeSummary(programmeId: string): Promise<Programm
  * Fetches payment detail targeting GET /api/v1/openledger/payments/:paymentId.
  * Throws structured ApiError on non-200 responses.
  */
-export async function getPaymentDetail(paymentId: string): Promise<PaymentDetailResponse> {
+export async function getPaymentDetail(paymentId: string): Promise<PaymentDetail> {
   const res = await fetch(`/api/v1/openledger/payments/${encodeURIComponent(paymentId)}`);
-  return handleApiResponse<PaymentDetailResponse>(res);
+  return handleApiResponse<PaymentDetail>(res);
 }
 
 /**

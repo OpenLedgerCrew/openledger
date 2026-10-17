@@ -1,5 +1,6 @@
 import type { PaymentRow, Programme, ProgrammeAggregates } from "../types";
 import { FALLBACK_SNAPSHOT } from "./fixtures/sdp-fallback-snapshot";
+import { triggerRateLimitAlert } from "../utils/rateLimit";
 
 export interface ProgrammeDetailResponse {
   programme_id: string;
@@ -23,10 +24,10 @@ export interface FetchResult<T> {
 // we give up and show the (possibly stale) fallback snapshot.
 const RETRY_DELAYS_MS = [3000, 8000];
 
-/** Only retry on signals that plausibly mean "still waking up" — not on definitive app errors
+/** Only retry on signals that plausibly mean "still waking up" or rate-limited — not on definitive app errors
  * like a 404 for an id that genuinely doesn't exist, which retrying would never fix. */
 function isRetryableStatus(status: number): boolean {
-  return status === 502 || status === 503 || status === 504;
+  return status === 429 || status === 502 || status === 503 || status === 504;
 }
 
 async function fetchWithRetry(
@@ -40,6 +41,9 @@ async function fetchWithRetry(
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const res = await fetch(input, init);
+      if (res.status === 429) {
+        triggerRateLimitAlert();
+      }
       if (res.ok || !isRetryableStatus(res.status)) return res;
       lastError = new Error(`Request failed (${res.status})`);
     } catch (err) {

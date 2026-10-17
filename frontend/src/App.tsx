@@ -8,10 +8,35 @@ import { About } from "./pages/About";
 import Contact from "./pages/Contact";
 import { PaymentDetail } from "./pages/PaymentDetail";
 import { LegalPage } from "./pages/LegalPage";
+import { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import { Toaster } from "sonner";
 import { PageShell, Container, Section } from "./components/ui/PageShell";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { AccessibilityToolbar } from "./components/AccessibilityToolbar";
 import { useChatContext } from "./contexts/ChatContext";
+import { subscribeRateLimit, RATE_LIMIT_MESSAGE } from "./utils/rateLimit";
+
+function RateLimitAlertBanner() {
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    return subscribeRateLimit(setActive);
+  }, []);
+
+  if (!active) return null;
+
+  return (
+    <div
+      role="alert"
+      aria-live="assertive"
+      className="bg-amber-600 text-white font-medium text-sm py-2 px-4 text-center sticky top-0 z-50 shadow-md flex items-center justify-center gap-2"
+    >
+      <AlertTriangle size={16} aria-hidden="true" />
+      <span>{RATE_LIMIT_MESSAGE}</span>
+    </div>
+  );
+}
 
 function PaymentDetailRoute() {
   const { programmeId, referenceId } = useParams();
@@ -46,6 +71,8 @@ export default function App() {
 
   return (
     <>
+      <Toaster position="top-right" richColors />
+      <RateLimitAlertBanner />
       <AccessibilityToolbar />
 
       {/* Main content area — shifts left on desktop when chat is open */}

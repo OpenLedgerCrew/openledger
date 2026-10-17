@@ -1,9 +1,11 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { ProgrammeView } from '../../src/pages/ProgrammeView';
+import { ProgrammeDetailPage } from '../../src/pages/ProgrammeDetailPage';
 import {
   ANCHOR_HASH,
   EXPLORER_BASE,
+  PROGRAMME_ID,
   PROGRAMME_NAME,
   TX_HASH,
   apiServer,
@@ -11,6 +13,7 @@ import {
 
 // Doc section 6.4 — Walkthrough 4: Stellar Explorer Link, at the component-integration level.
 // The link is built by concatenation (D-1; I-3: "No coupling. No API, no key, no SLA").
+// ProgrammeDetailPage is the real non-modal /programmes/:programmeId route (App.tsx line 62).
 
 const server = apiServer();
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
@@ -21,14 +24,17 @@ afterEach(() => {
 afterAll(() => server.close());
 
 async function renderProgramme() {
-  render(<ProgrammeView />);
+  render(
+    <MemoryRouter initialEntries={[`/programmes/${PROGRAMME_ID}`]}>
+      <Routes>
+        <Route path="/programmes/:programmeId" element={<ProgrammeDetailPage />} />
+      </Routes>
+    </MemoryRouter>,
+  );
   await screen.findByText(PROGRAMME_NAME);
 }
 
-// Pre-existing gap (see walkthrough1-programme-view.test.tsx top comment): ProgrammeView no
-// longer takes a programmeId prop and doesn't render a single programme's payment table
-// directly — that behavior lives in ProgrammeDetailModal today. Skipped pending that decision.
-describe.skip('walkthrough 4 — Stellar explorer link (doc section 6.4)', () => {
+describe('walkthrough 4 — Stellar explorer link (doc section 6.4)', () => {
   it("6.4 item 1 — the settled payment's explorer link is well-formed, points at stellar.expert, and producing it made no network call beyond the data load", async () => {
     await renderProgramme();
     const fetchSpy = vi.spyOn(globalThis, 'fetch'); // after data load: link rendering itself fetches nothing
