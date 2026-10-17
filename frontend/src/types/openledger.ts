@@ -37,17 +37,20 @@ export interface ProgrammeSummary {
 
 export interface BlockchainTx {
   tx_hash: string | null;
-  explorer_url: string | null;
+  explorer_url?: string | null;
+  stellar_explorer_url?: string | null;
   ledger_sequence?: number | null;
 }
 
 export interface DeliveryDetails {
   status: DeliveryStatus;
   delivery_method?: "DIRECT_WALLET" | "LASTMILE_ESCROW" | "CASH_OFFLINE" | string;
+  is_lastmile?: boolean;
   confirmed_at?: string | null;
   escrow_contract_id?: string | null;
   anchoring_tx_hash?: string | null;
   explorer_url?: string | null;
+  stellar_explorer_url?: string | null;
 }
 
 export interface PaymentListItem {
@@ -81,7 +84,9 @@ export interface FundsSentLeg {
   amount: string;
   asset: string;
   tx_hash: string | null;
-  explorer_url: string | null;
+  explorer_url?: string | null;
+  stellar_explorer_url?: string | null;
+  description?: string;
   settled_at: string | null;
   memo?: string | null;
   disbursed_at?: string | null;
@@ -89,10 +94,13 @@ export interface FundsSentLeg {
 
 export interface CashDeliveredLeg {
   status: DeliveryStatus;
+  description?: string;
+  is_lastmile?: boolean;
   confirmed_at: string | null;
   escrow_contract_id: string | null;
   anchoring_tx_hash: string | null;
-  explorer_url: string | null;
+  explorer_url?: string | null;
+  stellar_explorer_url?: string | null;
   confirmation_method?: string | null;
   agent_reference?: string | null;
 }

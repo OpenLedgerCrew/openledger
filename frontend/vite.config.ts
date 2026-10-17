@@ -5,7 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 // Overridable so a local dev server can point at a remotely-tunneled backend
 // (e.g. VITE_BACKEND_URL=https://xxxx.ngrok-free.dev npm run dev).
-const backendTarget = process.env.VITE_API_BASE_URL || process.env.VITE_BACKEND_URL || "http://localhost:3001";
+const backendTarget = process.env.VITE_BACKEND_URL || "http://localhost:8000";
 
 export default defineConfig({
   plugins: [
@@ -33,9 +33,9 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: backendTarget,
+        target: process.env.VITE_BACKEND_URL || "http://localhost:8000",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api(\/v1\/openledger)?/, "/api/v1/openledger"),
+        rewrite: (path) => path.replace(/^\/api/, "/openledger"),
         // Bypasses ngrok's free-tier browser-warning interstitial, which would
         // otherwise return an HTML page instead of JSON through the proxy.
         headers: { "ngrok-skip-browser-warning": "true" },

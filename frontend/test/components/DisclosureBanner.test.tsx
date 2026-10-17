@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { DisclosureBanner } from '../../src/components/DisclosureBanner';
-import { ProgrammeView } from '../../src/pages/ProgrammeView';
-import { apiServer } from '../helpers/api';
+import { ProgrammeDetailPage } from '../../src/pages/ProgrammeDetailPage';
+import { PROGRAMME_ID, apiServer } from '../helpers/api';
 
 // Doc section 4.5 — the "Honest About Limits" disclosure, asserted verbatim from the document,
 // not paraphrased (test rule 4).
@@ -35,16 +36,16 @@ describe('DisclosureBanner (doc section 4.5)', () => {
 
   // Section 6.1 item 3 / O-3 — "The section 4.5 disclosure is visible on the same screen, not
   // below the fold and not in a modal." Present in the initial DOM render, not gated behind a
-  // click or toggle.
-  //
-  // Skipped: pre-existing gap found while wiring the frontend to the real backend (still fails
-  // the same way on the untouched pre-integration code). ProgrammeView no longer takes a
-  // programmeId prop and is a list-of-programmes page; the component that actually shows this
-  // disclosure for one programme is ProgrammeDetailModal, which IS a modal — directly
-  // contradicting this test's "not in a modal" requirement. No non-modal single-programme route
-  // exists today. Needs a product decision, not a silent fix either way.
-  it.skip('6.1 item 3 — banner is present in the programme view initial render, not buried behind interaction or a modal', async () => {
-    render(<ProgrammeView />);
+  // click or toggle. Verified against ProgrammeDetailPage — the real non-modal /programmes/:id
+  // route (App.tsx line 62) — which renders <DisclosureBanner /> directly in its main content.
+  it('6.1 item 3 — banner is present in the programme view initial render, not buried behind interaction or a modal', async () => {
+    render(
+      <MemoryRouter initialEntries={[`/programmes/${PROGRAMME_ID}`]}>
+        <Routes>
+          <Route path="/programmes/:programmeId" element={<ProgrammeDetailPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
     // No click, no toggle: the heading must appear from the initial render/data load alone.
     expect(await screen.findByText('How to read this page')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument(); // not in a modal

@@ -4,3 +4,5 @@ dist/
 coverage/
 .DS_Store
 .env
+backend/G3/
+wkhtmltopdf/

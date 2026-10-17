@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { PaymentDetail } from '../../src/pages/PaymentDetail';
-import { ProgrammeView } from '../../src/pages/ProgrammeView';
-import { PII_VALUES, PROGRAMME_NAME, TX_HASH, apiServer } from '../helpers/api';
+import { ProgrammeDetailPage } from '../../src/pages/ProgrammeDetailPage';
+import { PII_VALUES, PROGRAMME_ID, PROGRAMME_NAME, TX_HASH, apiServer } from '../helpers/api';
 
 // Doc section 6.2 — Walkthrough 2: Payment Verification, at the component-integration level.
 
@@ -12,11 +13,16 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('walkthrough 2 — payment verification (doc section 6.2)', () => {
-  // Pre-existing gap (see walkthrough1-programme-view.test.tsx top comment): ProgrammeView no
-  // longer takes a programmeId prop and doesn't render a single programme's payment table
-  // directly — that behavior lives in ProgrammeDetailModal today. Skipped pending that decision.
-  it.skip('6.2 item 1 — a payment in the table is selectable: its row links to the detail view', async () => {
-    render(<ProgrammeView />);
+  // Covered by ProgrammeDetailPage — the real non-modal /programmes/:programmeId route
+  // (App.tsx line 62) — which uses the same id the list returned to build its link.
+  it('6.2 item 1 — a payment in the table is selectable: its row links to the detail view', async () => {
+    render(
+      <MemoryRouter initialEntries={[`/programmes/${PROGRAMME_ID}`]}>
+        <Routes>
+          <Route path="/programmes/:programmeId" element={<ProgrammeDetailPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
     await screen.findByText(PROGRAMME_NAME);
     const rowLink = screen.getByRole('link', { name: /REF-001/ });
     expect(rowLink).toHaveAttribute('href', expect.stringContaining('REF-001'));

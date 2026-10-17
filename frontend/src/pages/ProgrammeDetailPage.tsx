@@ -14,6 +14,10 @@ import { ImpactCharts } from "../components/ImpactCharts";
 import { PaymentDetailsModal } from "../components/PaymentDetailsModal";
 import { Button } from "../components/ui/button";
 import { formatDeliveryRate } from "../utils/formatters";
+import { ProgrammeHeader } from "../components/ProgrammeHeader";
+import { PaymentsTable } from "../components/PaymentsTable";
+import { PaymentDetailModal } from "../components/PaymentDetailModal";
+import type { ProgrammeSummary, PaymentListItem, PaymentStatus, DeliveryStatus } from "@/types/openledger";
 
 export function ProgrammeDetailPage() {
   const { programmeId } = useParams<{ programmeId: string }>();
@@ -25,6 +29,8 @@ export function ProgrammeDetailPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState<PaymentRow | null>(null);
+  const [verificationPaymentId, setVerificationPaymentId] = useState<string | null>(null);
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [waking, setWaking] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -149,6 +155,71 @@ export function ProgrammeDetailPage() {
     );
   }
 
+  const programmeSummary: ProgrammeSummary = {
+    programme_id: programmeId || "prog-1",
+    name: programmeName || programmeId || "Programme",
+    country_code: "KE",
+    currency: aggregates?.totals_by_asset?.[0]?.asset || "USDC",
+    status: (status === "COMPLETED" ? "COMPLETED" : status === "PAUSED" ? "PAUSED" : "ACTIVE") as any,
+    metrics: {
+      total_disbursed: aggregates?.totals_by_asset?.[0]?.total || "0.00",
+      total_payments_count: aggregates?.payment_count?.total || payments.length,
+      successful_payments_count: aggregates?.payment_count?.settled || 0,
+      confirmed_deliveries_count: aggregates?.rate_basis?.confirmed || 0,
+      delivery_rate: aggregates?.delivery_rate ?? 0,
+      last_updated_at: aggregates?.generated_at || new Date().toISOString(),
+    },
+  };
+
+  const paymentListItems: PaymentListItem[] = payments.map((p) => {
+    const explorerUrl =
+      p.explorer_url ||
+      (p.tx_hash ? `https://stellar.expert/explorer/testnet/tx/${p.tx_hash}` : null);
+    const isLastMile =
+      p.delivery?.state === "confirmed" ||
+      p.delivery?.state === "awaiting_confirmation" ||
+      Boolean(p.delivery?.anchoring_tx_hash);
+
+    const delStatus: DeliveryStatus =
+      p.delivery?.state === "confirmed"
+        ? "CONFIRMED"
+        : p.delivery?.state === "awaiting_confirmation"
+          ? "PENDING_ESCROW"
+          : p.delivery?.state === "not_applicable"
+            ? "NOT_APPLICABLE"
+            : "UNCONFIRMED";
+
+    return {
+      payment_id: p.reference_id,
+      reference_id: p.reference_id,
+      amount: p.amount,
+      asset: p.asset,
+      status: (p.status === "SUCCESS"
+        ? "SUCCESS"
+        : p.status === "FAILED"
+          ? "FAILED"
+          : "PENDING") as PaymentStatus,
+      disbursed_at: p.settled_at || p.created_at || null,
+      blockchain_tx: {
+        tx_hash: p.tx_hash,
+        explorer_url: explorerUrl,
+        stellar_explorer_url: explorerUrl,
+      },
+      delivery: {
+        status: delStatus,
+        delivery_method: isLastMile ? "LASTMILE_ESCROW" : "DIRECT_WALLET",
+        is_lastmile: isLastMile,
+        confirmed_at: p.delivery?.confirmed_at || null,
+        escrow_contract_id: p.delivery?.anchoring_tx_hash
+          ? "CCUENRJNRPVSIQG7LIHMUAVQOE5MIMYBFQQG7VXXRS4L5NTGALVX6IV5"
+          : null,
+        anchoring_tx_hash: p.delivery?.anchoring_tx_hash || null,
+        explorer_url: p.delivery?.explorer_url || null,
+        stellar_explorer_url: p.delivery?.explorer_url || null,
+      },
+    };
+  });
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
@@ -252,7 +323,7 @@ export function ProgrammeDetailPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ backgroundColor: "var(--muted)", borderBottom: "1px solid var(--border)" }}>
-                      {["Reference", "Amount", "Status", "Settlement", "Delivery", ""].map((h) => (
+                      {["Reference", "Amount", "Status", "Settled", "Settlement", "Delivery", ""].map((h) => (
                         <th
                           key={h}
                           style={{
@@ -281,13 +352,22 @@ export function ProgrammeDetailPage() {
                         }}
                       >
                         <td style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--foreground)" }}>
-                          {p.reference_id}
+                          <Link
+                            to={`/programmes/${programmeId}/payments/${p.reference_id}`}
+                            style={{ color: "inherit", textDecoration: "none" }}
+                            className="hover:underline"
+                          >
+                            {p.reference_id}
+                          </Link>
                         </td>
                         <td style={{ padding: "10px 14px", color: "var(--foreground)" }}>
                           {p.amount} {p.asset}
                         </td>
                         <td style={{ padding: "10px 14px" }}>
                           <StatusBadge status={p.status} />
+                        </td>
+                        <td style={{ padding: "10px 14px", color: "var(--foreground)", fontSize: 12 }}>
+                          {p.settled_at ? new Date(p.settled_at).toISOString().split("T")[0] : <span style={{ color: "var(--muted-foreground)" }}>—</span>}
                         </td>
                         <td style={{ padding: "10px 14px" }}>
                           {p.tx_hash ? (
@@ -308,7 +388,7 @@ export function ProgrammeDetailPage() {
                               </span>
                             </ExplorerLink>
                           ) : (
-                            <span style={{ color: "var(--muted-foreground)", fontSize: 12 }}>Not settled</span>
+                            <span style={{ color: "var(--muted-foreground)", fontSize: 12 }}>Not yet settled.</span>
                           )}
                         </td>
                         <td style={{ padding: "10px 14px" }}>
@@ -458,10 +538,10 @@ function DeliveryCell({ delivery }: { delivery?: PaymentRow["delivery"] }) {
   }
   const label =
     delivery.state === "awaiting_confirmation"
-      ? "Awaiting"
+      ? "Awaiting confirmation"
       : delivery.state === "not_applicable"
-      ? "N/A"
-      : delivery.label;
+        ? "Not applicable"
+        : delivery.label;
   const color = delivery.state === "awaiting_confirmation" ? "#d97706" : "var(--muted-foreground)";
   return <span style={{ color, fontSize: 12, fontWeight: 500 }}>{label}</span>;
 }
