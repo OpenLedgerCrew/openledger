@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FileText, X, ArrowRight, Eye } from "lucide-react";
+import { FileText, X, ArrowRight, Eye, FileQuestion, Inbox, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import type { PaymentRow, ProgrammeAggregates } from "../types";
 import { fetchProgrammeDetail } from "../api/programmes";
 import { programmeStatusMeta } from "../components/lib/programmeStatus";
@@ -34,6 +35,7 @@ export function ProgrammeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [waking, setWaking] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const chartsRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(
@@ -72,26 +74,13 @@ export function ProgrammeDetailPage() {
   }, [programmeName]);
 
   const handleExportPdf = async () => {
-    if (!programmeId) return;
+    if (!programmeId || exportingPdf) return;
+    setExportingPdf(true);
     // Capture chart images if charts are rendered
     let chartImages: { bar?: string; pie?: string } = {};
     if (chartsRef.current) {
       try {
         const svgs = chartsRef.current.querySelectorAll("svg");
-        const toDataUrl = (svg: SVGElement): string => {
-          const serializer = new XMLSerializer();
-          const svgStr = serializer.serializeToString(svg);
-          const canvas = document.createElement("canvas");
-          canvas.width = svg.clientWidth || 300;
-          canvas.height = svg.clientHeight || 220;
-          const ctx = canvas.getContext("2d");
-          const img = new Image();
-          img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgStr)));
-          return new Promise<string>((resolve) => {
-            img.onload = () => { ctx?.drawImage(img, 0, 0); resolve(canvas.toDataURL("image/png")); };
-            img.onerror = () => resolve("");
-          }) as unknown as string;
-        };
         const captures = await Promise.all(Array.from(svgs).map((s) => {
           const serializer = new XMLSerializer();
           const svgStr = serializer.serializeToString(s);
@@ -114,25 +103,44 @@ export function ProgrammeDetailPage() {
     }
 
     try {
-      const res = await fetch(`/api/programmes/${programmeId}/export`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chartImages }),
-      });
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${programmeId}-report.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-        return;
+      let downloaded = false;
+      try {
+        const res = await fetch(`/api/programmes/${programmeId}/export`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chartImages }),
+        });
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${programmeId}-report.pdf`;
+          a.click();
+          URL.revokeObjectURL(url);
+          downloaded = true;
+        }
+      } catch {
+        // fall through to GET fallback
       }
+
+      if (!downloaded) {
+        const res2 = await fetch(`/api/programmes/${programmeId}/export.pdf`);
+        if (!res2.ok) throw new Error(`Export failed (${res2.status})`);
+        const blob2 = await res2.blob();
+        const url2 = URL.createObjectURL(blob2);
+        const a2 = document.createElement("a");
+        a2.href = url2;
+        a2.download = `${programmeId}-report.pdf`;
+        a2.click();
+        URL.revokeObjectURL(url2);
+      }
+      toast.success("PDF report downloaded successfully");
     } catch {
-      // fall through to GET fallback
+      toast.error("Failed to export PDF report. Please try again.");
+    } finally {
+      setExportingPdf(false);
     }
-    window.open(`/api/programmes/${programmeId}/export.pdf`, "_blank");
   };
 
   const statusMeta = programmeStatusMeta(status);
@@ -141,14 +149,21 @@ export function ProgrammeDetailPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 text-center">
-          <h1 className="text-3xl font-bold font-serif text-foreground">Programme Not Found</h1>
-          <p className="text-muted-foreground">
-            The programme <code className="font-mono text-sm">{programmeId}</code> does not exist.
-          </p>
-          <Link to="/programmes" className="text-primary font-semibold hover:underline">
-            ← Back to Programmes
-          </Link>
+        <main className="flex-1 flex items-center justify-center p-4 sm:p-8">
+          <div className="max-w-md w-full bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm text-center flex flex-col items-center">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-4">
+              <FileQuestion size={24} aria-hidden="true" />
+            </div>
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">Programme Not Found</h1>
+            <p className="text-sm text-muted-foreground mb-6">
+              The programme <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{programmeId}</code> does not exist (<span className="font-mono text-xs text-muted-foreground">programme_not_found</span>).
+            </p>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/programmes">
+                ← Return to Programmes
+              </Link>
+            </Button>
+          </div>
         </main>
         <Footer />
       </div>
@@ -265,10 +280,15 @@ export function ProgrammeDetailPage() {
                 <Button
                   variant="outline"
                   onClick={handleExportPdf}
+                  disabled={exportingPdf}
                   aria-label="Export PDF report"
                 >
-                  <FileText size={16} aria-hidden="true" />
-                  Export PDF
+                  {exportingPdf ? (
+                    <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                  ) : (
+                    <FileText size={16} aria-hidden="true" />
+                  )}
+                  {exportingPdf ? "Exporting..." : "Export PDF"}
                 </Button>
                 <EmailReportButton
                   programmeId={programmeId!}
@@ -319,98 +339,110 @@ export function ProgrammeDetailPage() {
             {/* Payment table */}
             <div className="mb-8">
               <h2 className="font-serif text-xl font-bold text-foreground mb-4">Recent Payments</h2>
-              <div className="overflow-x-auto rounded-xl border border-border">
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ backgroundColor: "var(--muted)", borderBottom: "1px solid var(--border)" }}>
-                      {["Reference", "Amount", "Status", "Settled", "Settlement", "Delivery", ""].map((h) => (
-                        <th
-                          key={h}
+              {payments.length === 0 ? (
+                <div className="rounded-xl border border-border bg-card p-8 text-center flex flex-col items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-3">
+                    <Inbox size={24} aria-hidden="true" />
+                  </div>
+                  <h3 className="text-base font-semibold text-foreground mb-1">No Disbursements Recorded</h3>
+                  <p className="text-sm text-muted-foreground">
+                    No disbursements recorded yet for this programme.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "var(--muted)", borderBottom: "1px solid var(--border)" }}>
+                        {["Reference", "Amount", "Status", "Settled", "Settlement", "Delivery", ""].map((h) => (
+                          <th
+                            key={h}
+                            style={{
+                              padding: "10px 14px",
+                              textAlign: h === "" ? "right" : "left",
+                              fontWeight: 600,
+                              color: "var(--muted-foreground)",
+                              fontSize: 11,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.06em",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payments.map((p, idx) => (
+                        <tr
+                          key={p.reference_id}
                           style={{
-                            padding: "10px 14px",
-                            textAlign: h === "" ? "right" : "left",
-                            fontWeight: 600,
-                            color: "var(--muted-foreground)",
-                            fontSize: 11,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.06em",
-                            whiteSpace: "nowrap",
+                            borderBottom: idx < payments.length - 1 ? "1px solid var(--border)" : "none",
+                            transition: "background 0.12s",
                           }}
                         >
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((p, idx) => (
-                      <tr
-                        key={p.reference_id}
-                        style={{
-                          borderBottom: idx < payments.length - 1 ? "1px solid var(--border)" : "none",
-                          transition: "background 0.12s",
-                        }}
-                      >
-                        <td style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--foreground)" }}>
-                          <Link
-                            to={`/programmes/${programmeId}/payments/${p.reference_id}`}
-                            style={{ color: "inherit", textDecoration: "none" }}
-                            className="hover:underline"
-                          >
-                            {p.reference_id}
-                          </Link>
-                        </td>
-                        <td style={{ padding: "10px 14px", color: "var(--foreground)" }}>
-                          {p.amount} {p.asset}
-                        </td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <StatusBadge status={p.status} />
-                        </td>
-                        <td style={{ padding: "10px 14px", color: "var(--foreground)", fontSize: 12 }}>
-                          {p.settled_at ? new Date(p.settled_at).toISOString().split("T")[0] : <span style={{ color: "var(--muted-foreground)" }}>—</span>}
-                        </td>
-                        <td style={{ padding: "10px 14px" }}>
-                          {p.tx_hash ? (
-                            <ExplorerLink
-                              txHash={p.tx_hash}
-                              baseUrl="https://stellar.expert/explorer/testnet"
-                              className=""
+                          <td style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--foreground)" }}>
+                            <Link
+                              to={`/programmes/${programmeId}/payments/${p.reference_id}`}
+                              style={{ color: "inherit", textDecoration: "none" }}
+                              className="hover:underline"
                             >
-                              <span
-                                style={{
-                                  fontFamily: "var(--font-mono)",
-                                  fontSize: 11,
-                                  color: "var(--success)",
-                                  fontWeight: 600,
-                                }}
+                              {p.reference_id}
+                            </Link>
+                          </td>
+                          <td style={{ padding: "10px 14px", color: "var(--foreground)" }}>
+                            {p.amount} {p.asset}
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            <StatusBadge status={p.status} />
+                          </td>
+                          <td style={{ padding: "10px 14px", color: "var(--foreground)", fontSize: 12 }}>
+                            {p.settled_at ? new Date(p.settled_at).toISOString().split("T")[0] : <span style={{ color: "var(--muted-foreground)" }}>—</span>}
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            {p.tx_hash ? (
+                              <ExplorerLink
+                                txHash={p.tx_hash}
+                                baseUrl="https://stellar.expert/explorer/testnet"
+                                className=""
                               >
-                                {p.tx_hash.slice(0, 8)}…
-                              </span>
-                            </ExplorerLink>
-                          ) : (
-                            <span style={{ color: "var(--muted-foreground)", fontSize: 12 }}>Not yet settled.</span>
-                          )}
-                        </td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <DeliveryCell delivery={p.delivery} />
-                        </td>
-                        <td style={{ padding: "10px 14px", textAlign: "right" }}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedPayment(p)}
-                            aria-label={`View payment ${p.reference_id}`}
-                            className="text-primary hover:bg-primary/10"
-                          >
-                            <Eye size={16} className="mr-1" />
-                            View
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                                <span
+                                  style={{
+                                    fontFamily: "var(--font-mono)",
+                                    fontSize: 11,
+                                    color: "var(--success)",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {p.tx_hash.slice(0, 8)}…
+                                </span>
+                              </ExplorerLink>
+                            ) : (
+                              <span style={{ color: "var(--muted-foreground)", fontSize: 12 }}>Not yet settled.</span>
+                            )}
+                          </td>
+                          <td style={{ padding: "10px 14px" }}>
+                            <DeliveryCell delivery={p.delivery} />
+                          </td>
+                          <td style={{ padding: "10px 14px", textAlign: "right" }}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedPayment(p)}
+                              aria-label={`View payment ${p.reference_id}`}
+                              className="text-primary hover:bg-primary/10"
+                            >
+                              <Eye size={16} className="mr-1" />
+                              View
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Pagination */}
               {totalPages > 1 && (
